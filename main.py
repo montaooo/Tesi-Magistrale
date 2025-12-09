@@ -5,7 +5,7 @@ import warnings
 import re
 
 from concept_drift import rf_downsampling, rf_oversampling, standard_rf, rf_periodic_drift, rf_monthly
-from strategies.continual_learning import rf_cl, cl_single_botnet
+from strategies.continual_learning import rf_cl, ensemble_cl
 
 pd.options.mode.chained_assignment = None
 
@@ -156,7 +156,7 @@ normal_list = [
     FlowFile("2017", "05", "01", "normal", "17"),
     FlowFile("2017", "05", "01", "normal", "18"),
     FlowFile("2017", "05", "01", "normal", "19"),
-    FlowFile("2013", "12", "17", "normal", "20"),
+    # FlowFile("2013", "12", "17", "normal", "20"),
     FlowFile("2017", "05", "02", "normal", "21"),
     FlowFile("2018", "05", "07", "normal", "22")
 ]
@@ -236,7 +236,6 @@ for m in malicious_list:
     m_dset = preprocess(m_dset, filter_malicious, m, test_size)
     all_dsets = pd.concat([all_dsets, m_dset])
     
-
 print("Reading NORMAL...")
 for n in normal_list:
     # print(f"Reading file {n.filename}")
@@ -256,17 +255,17 @@ all_dsets['Date'] = pd.to_datetime(all_dsets['Date'])
 
 # -------------------- TRAINING --------------------
 
-with open("performances/tmp.txt", "w") as f:
+with open("performances/tmp.txt", "a") as f:
     f.write("START\n\n")
 
 all_results = []
 for i in range(1,6):
     print(f"Test {i}")
-    results_standard = rf_cl(all_dsets, test_size)
+    results_standard = ensemble_cl(all_dsets, test_size, botnet="all")
     print_metrics(results_standard)
     all_results.append(results_standard)
     exit()
-  
+
 mean_results = {}
 metrics = ["Precision", "F1", "TPR", "TNR"]
 # metrics = ['TPR']

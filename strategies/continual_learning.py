@@ -7,11 +7,11 @@ import datetime, time
 
 from tesseract import temporal, spatial
 
-def best_half_data(clf: RandomForestClassifier, X_test: pd.DataFrame, y_test: pd.DataFrame):
+def best_K_data(clf: RandomForestClassifier, X_test: pd.DataFrame, y_test: pd.DataFrame, K: int):
     '''
     Funzione per ottenere i K dati più significativi del dataset testato. Vengono scelti i K più vicini al decision boundary.
     '''
-    K = y_test.shape[0] // 2
+    # K = y_test.shape[0] // 2
     probs = clf.predict_proba(X_test)
     max_probs = np.max(probs, axis=1)
     indexes = np.argsort(max_probs)[:K]
@@ -93,8 +93,63 @@ def print_metrics(metrics, f):
     print(m.to_markdown(numalign="center", stralign="center"), file=f)
     print("", file=f)
     
+def splits_handle(splits, botnet):
+    '''
+    Nel caso di tutte le botnet:
+    Per avere dataset con più dati e il maggior numero di casi di test, divido in Maggio, Giugno/Luglio, Agosto/Settembre, Aprile/Maggio 2018.
+    Per farlo, i test saranno: 8 Maggio - 7 Giugno, 8 Giugno - 7 Agosto, 8 Agosto - 7 Settembre, 8 Aprile - 7 Maggio 2018 (unisco i mesi Giugno e Luglio perché avrei pochi dati normali altrimenti).
+    
+    :param splits: Array contenente i vari dataset di train e test periodici iniziali
+    '''
 
-def rf_cl(dset: pd.DataFrame, test_size):
+    X_train, X_tests, y_train, y_tests, t_train, t_tests = splits
+    
+    # Rimozione mesi in cui non ci sono dati
+    X_tests, y_tests, t_tests = clean_dsets(X_tests, y_tests, t_tests)
+
+    if botnet == "all":
+        X_optimized_tests = []
+        y_optimized_tests = []
+        t_optimized_tests = []
+
+        i = 0
+        while i < len(X_tests):
+            if i == 1:
+                X_optimized_tests.append(np.concatenate([X_tests[i], X_tests[i+1]]))
+                y_optimized_tests.append(np.concatenate([y_tests[i], y_tests[i+1]]))
+                t_optimized_tests.append(pd.concat([t_tests[i], t_tests[i+1]]))
+                i += 2
+            else:
+                X_optimized_tests.append(X_tests[i])
+                y_optimized_tests.append(y_tests[i])
+                t_optimized_tests.append(t_tests[i])
+                i += 1
+    elif botnet == "single":
+        X_optimized_tests = X_tests
+        y_optimized_tests = y_tests
+        t_optimized_tests = t_tests
+    else:
+        raise ValueError(f"botnet name '{botnet}' invalid")      
+    
+    return X_train, y_train, t_train, X_optimized_tests, y_optimized_tests, t_optimized_tests
+
+def ensemble_predict(ensemble, X: pd.DataFrame):
+    '''
+    Funzione per effettuare la predizione dell'ensemble. La votazione avviene a maggioranza di confidenza.
+    
+    :ensemble: Lista di tutti i modelli.
+    :X: Set di dati da testare.
+    '''
+    if not ensemble:
+        raise ValueError("Empty ensemble")
+
+    all_probs = [model.predict_proba(X) for model in ensemble]
+    avg_probs = np.mean(all_probs, axis=0)
+    final_preds = np.argmax(avg_probs, axis=1)
+
+    return final_preds, avg_probs
+
+def rf_cl(dset: pd.DataFrame, test_size, botnet: str):
     results = {"Precision": [], "F1": [], "TNR": [], "TPR": [], "Date": []}
     t = pd.to_datetime(dset['Date'])
     y = dset['Label'].values
@@ -103,71 +158,52 @@ def rf_cl(dset: pd.DataFrame, test_size):
     fixed_start_date = pd.to_datetime("2016-09-08")
     train_size = 8
 
-    starttime = time.time()
-    f = open("performances/tmp.txt", "a")
-    print(f"Start time: {datetime.datetime.now().time()}", file=f)
-
     splits = temporal.time_aware_train_test_split(X, y, t, train_size=train_size, test_size=1, granularity="month", start_date=fixed_start_date)
-    X_train, X_tests, y_train, y_tests, t_train, t_tests = splits
-
-    # Rimozione mesi in cui non ci sono dati
-    X_tests, y_tests, t_tests = clean_dsets(X_tests, y_tests, t_tests)
     
-    # Per avere dataset con più dati e il maggior numero di casi di test, divido in Maggio, Giugno/Luglio, Agosto/Settembre, Aprile/Maggio 2018
-    # Per farlo, i test saranno: 8 Maggio - 7 Giugno, 8 Giugno - 7 Agosto, 8 Agosto - 7 Settembre, 8 Aprile - 7 Maggio 2018
-    # Unisco i mesi Giugno e Luglio perché avrei pochi dati normali altrimenti.
-
-    X_optimized_tests = []
-    y_optimized_tests = []
-    t_optimized_tests = []
-    
-    i = 0
-    while i < len(X_tests):
-        if i == 1:
-            X_optimized_tests.append(np.concatenate([X_tests[i], X_tests[i+1]]))
-            y_optimized_tests.append(np.concatenate([y_tests[i], y_tests[i+1]]))
-            t_optimized_tests.append(pd.concat([t_tests[i], t_tests[i+1]]))
-            i += 2
-        else:
-            X_optimized_tests.append(X_tests[i])
-            y_optimized_tests.append(y_tests[i])
-            t_optimized_tests.append(t_tests[i])
-            i += 1
-
+    X_train, y_train, t_train, X_optimized_tests, y_optimized_tests, t_optimized_tests = splits_handle(splits, botnet)
     calculate_dates(fixed_start_date, train_size, results, t_optimized_tests)
 
     # Downsample dati di training (per performance) e testing (troppi malware)
-    X_train, y_train, t_train = spatial.downsample_set(X_train, y_train, t_train.values, min_pos_rate=1/2)
+    if botnet == "all":
+        X_train, y_train, t_train = spatial.downsample_set(X_train, y_train, t_train.values, min_pos_rate=1/2)
 
-    for i, (x_i, y_i, t_i) in enumerate(zip(X_optimized_tests, y_optimized_tests, t_optimized_tests)):
-        x_i, y_i, t_i = spatial.downsample_set(x_i, y_i, t_i.values, min_pos_rate=1/21)
-        X_optimized_tests[i] = x_i
-        y_optimized_tests[i] = y_i
-        t_optimized_tests[i] = t_i
-    
-    splits = (X_train, X_optimized_tests, y_train, y_optimized_tests, t_train, t_optimized_tests)
+        for i, (x_i, y_i, t_i) in enumerate(zip(X_optimized_tests, y_optimized_tests, t_optimized_tests)):
+            x_i, y_i, t_i = spatial.downsample_set(x_i, y_i, t_i.values, min_pos_rate=1/21)
+            X_optimized_tests[i] = x_i
+            y_optimized_tests[i] = y_i
+            t_optimized_tests[i] = t_i
+    elif botnet == "single":
+        X_train, y_train, t_train = spatial.downsample_set(X_train, y_train, t_train.values, min_pos_rate=1/21)
+    else:
+        raise ValueError(f"botnet name '{botnet}' invalid")
+
     clf = RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42)
 
-    # -------------------- CONTINUAL LEARNING --------------------
     print("Old data training...")
     X_train_past, X_test_past, y_train_past, y_test_past = train_test_split(X_train, y_train, test_size=test_size, random_state=42, stratify=y_train)
 
     clf.fit(X_train_past, y_train_past)
     pred = clf.predict(X_test_past)
+    calculate_metrics(y_test_past, pred, results, botnet)
 
-    calculate_metrics(y_test_past, pred, results)
+    K = y_train.shape[0] // 2
+    X_train_sliding, y_train_sliding = best_K_data(clf, X_train, y_train, K)
 
-    X_train_sliding, y_train_sliding = best_half_data(clf, X_train, y_train)
-    
+    # -------------------- CONTINUAL LEARNING --------------------    
+    starttime = time.time()
+    f = open("performances/tmp.txt", "a")
+    print(f"Start time: {datetime.datetime.now().time()}", file=f)
+
     for i, (x_test, y_test) in enumerate(zip(X_optimized_tests, y_optimized_tests), 1):
         print(f"Cycle {i}")
         
         clf.fit(X_train_sliding, y_train_sliding)
         pred = clf.predict(x_test)
         # print(check_importances(clf, X_columns))
-        calculate_metrics(y_test, pred, results)
+        calculate_metrics(y_test, pred, results, botnet)
         
-        X_retraining, y_retraining = best_half_data(clf, x_test, y_test)
+        K = y_test.shape[0] // 2
+        X_retraining, y_retraining = best_K_data(clf, x_test, y_test, K)
         X_train_sliding = np.vstack((X_train_sliding, X_retraining))
         y_train_sliding = np.concatenate((y_train_sliding, y_retraining))
 
@@ -178,29 +214,34 @@ def rf_cl(dset: pd.DataFrame, test_size):
     f.close()
     return results
 
-def cl_single_botnet(dset: pd.DataFrame, test_size):
+def ensemble_cl(dset: pd.DataFrame, test_size, botnet: str):
     results = {"Precision": [], "F1": [], "TNR": [], "TPR": [], "Date": []}
     t = pd.to_datetime(dset['Date'])
     y = dset['Label'].values
     X = dset.drop(columns=['Date', 'Label']).values
     X_columns = dset.drop(columns=['Date', 'Label']).columns
+    fixed_start_date = pd.to_datetime("2016-09-08")
     train_size = 8
-    fixed_start_date = pd.to_datetime("2016-09-01")
-
-    starttime = time.time()
-    f = open("performances/tmp.txt", "a")
-    print(f"Start time: {datetime.datetime.now().time()}\n", file=f)
+    ensemble_models = []
 
     splits = temporal.time_aware_train_test_split(X, y, t, train_size=train_size, test_size=1, granularity="month", start_date=fixed_start_date)
-    X_train, X_tests, y_train, y_tests, t_train, t_tests = splits
+    
+    X_train, y_train, t_train, X_optimized_tests, y_optimized_tests, t_optimized_tests = splits_handle(splits, botnet)
+    calculate_dates(fixed_start_date, train_size, results, t_optimized_tests)
 
-    # Rimozione mesi in cui non ci sono dati
-    X_tests, y_tests, t_tests = clean_dsets(X_tests, y_tests, t_tests)
+    # Downsample dati di training (per performance) e testing (troppi malware)
+    if botnet == "all":
+        X_train, y_train, t_train = spatial.downsample_set(X_train, y_train, t_train.values, min_pos_rate=1/2)
 
-    calculate_dates(fixed_start_date, train_size, results, t_tests)
-
-    X_train, y_train, t_train = spatial.downsample_set(X_train, y_train, t_train.values, min_pos_rate=1/21)
-    splits = (X_train, X_tests, y_train, y_tests, t_train, t_tests)
+        # for i, (x_i, y_i, t_i) in enumerate(zip(X_optimized_tests, y_optimized_tests, t_optimized_tests)):
+        #     x_i, y_i, t_i = spatial.downsample_set(x_i, y_i, t_i.values, min_pos_rate=1/21)
+        #     X_optimized_tests[i] = x_i
+        #     y_optimized_tests[i] = y_i
+        #     t_optimized_tests[i] = t_i
+    elif botnet == "single":
+        X_train, y_train, t_train = spatial.downsample_set(X_train, y_train, t_train.values, min_pos_rate=1/21)
+    else:
+        raise ValueError(f"botnet name '{botnet}' invalid")
 
     clf = RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42)
 
@@ -208,25 +249,45 @@ def cl_single_botnet(dset: pd.DataFrame, test_size):
     X_train_past, X_test_past, y_train_past, y_test_past = train_test_split(X_train, y_train, test_size=test_size, random_state=42, stratify=y_train)
 
     clf.fit(X_train_past, y_train_past)
+    ensemble_models.append(clf)
     pred = clf.predict(X_test_past)
+    calculate_metrics(y_test_past, pred, results, botnet)
 
-    calculate_metrics(y_test_past, pred, results, botnet='single')
+    mask_neg = (y_train == 0)
+    X_neg, y_neg = best_K_data(clf, X_train[mask_neg], y_train[mask_neg], 1000)
     
-    X_train_sliding, y_train_sliding = best_half_data(clf, X_train, y_train)
+    # -------------------- CONTINUAL LEARNING --------------------
 
-    for i, (x_test, y_test) in enumerate(zip(X_tests, y_tests), 1):
+    starttime = time.time()
+    f = open("performances/tmp.txt", "a")
+    print(f"Start time: {datetime.datetime.now().time()}", file=f)
+
+    for i, (x_test, y_test) in enumerate(zip(X_optimized_tests, y_optimized_tests), 1):
         print(f"Cycle {i}")
-        clf.fit(X_train_sliding, y_train_sliding)
-        pred = clf.predict(x_test)
-        calculate_metrics(y_test, pred, results, botnet='single')
+
+        K = y_test.shape[0] // 2
+        pred, avg_probs = ensemble_predict(ensemble_models, x_test)
         
-        X_retraining, y_retraining = best_half_data(clf, x_test, y_test)
-        X_train_sliding = np.vstack((X_train_sliding, X_retraining))
-        y_train_sliding = np.concatenate((y_train_sliding, y_retraining))
+        # print(check_importances(clf, X_columns))
+        calculate_metrics(y_test, pred, results, botnet)
+
+        max_probs = np.max(avg_probs, axis=1)
+        indexes = np.argsort(max_probs)[:K]
+        print(y_test.shape)
+        if botnet == "all":
+            ensemble_models.append(RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42).fit(x_test, y_test))
+        elif botnet == "single":
+            X_sliding = np.vstack((X_neg, x_test))
+            y_sliding = np.concatenate((y_neg, y_test))
+            ensemble_models.append(RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42).fit(X_sliding[indexes], y_sliding[indexes]))
 
     endtime = time.time() - starttime
-    print(f"Time taken: {endtime}\n", file=f)
-    
+    print(f"Time taken: {endtime}", file=f)
+
     print_metrics(results, f)
     f.close()
     return results
+
+# def mode_per_column(col):
+#     return np.argmax(np.bincount(col))
+
