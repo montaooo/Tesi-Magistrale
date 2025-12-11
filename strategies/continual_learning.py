@@ -4,6 +4,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import numpy as np
 import datetime, time
+from math import floor
 
 from tesseract import temporal, spatial
 
@@ -18,14 +19,19 @@ def best_K_data(clf: RandomForestClassifier, X_test: pd.DataFrame, y_test: pd.Da
 
     return X_test[indexes], y_test[indexes]
 
+def decimal_floor(n: float, decimals: int):
+    n *= (10**decimals)
+    n = floor(n)
+    n /= (10**decimals)
+    return n
+
 def calculate_metrics(y_test, pred, results, botnet="all"):
     tn, fp, fn, tp = confusion_matrix(y_test, pred).ravel().tolist()
-    tpr = round(tp / (tp + fn), 3)
-    
+    tpr = decimal_floor(tp / (tp + fn), 3)
     if botnet == 'all':
-        tnr = round(tn / (tn + fp), 3)
-        f1 = round((2*tp) / (2*tp + fp + fn), 3)
-        precision = round(tp / (tp + fp), 3)
+        tnr = decimal_floor(tn / (tn + fp), 3)
+        f1 = decimal_floor((2*tp) / (2*tp + fp + fn), 3)
+        precision = decimal_floor(tp / (tp + fp), 3)
 
         results["F1"].append(f1)
         results["Precision"].append(precision)
@@ -133,7 +139,7 @@ def splits_handle(splits, botnet):
     
     return X_train, y_train, t_train, X_optimized_tests, y_optimized_tests, t_optimized_tests
 
-def ensemble_predict(ensemble, X: pd.DataFrame):
+#def ensemble_predict(ensemble, X: pd.DataFrame):
     '''
     Funzione per effettuare la predizione dell'ensemble. La votazione avviene a maggioranza di confidenza.
     
@@ -146,8 +152,32 @@ def ensemble_predict(ensemble, X: pd.DataFrame):
     all_probs = [model.predict_proba(X) for model in ensemble]
     avg_probs = np.mean(all_probs, axis=0)
     final_preds = np.argmax(avg_probs, axis=1)
+    
+    return final_preds, all_probs, avg_probs
 
-    return final_preds, avg_probs
+def ensemble_predict_weighted(ensemble, X: pd.DataFrame, weights):
+    if not ensemble:
+        raise ValueError("Empty ensemble")
+    
+    all_probs = [model.predict_proba(X) for model in ensemble]
+    weights = np.array(weights)
+    weigthed_probs = np.array(all_probs) * weights[:, np.newaxis, np.newaxis]
+    sum_probs = np.sum(weigthed_probs, axis=0)
+    sum_weights = np.sum(weights)
+    final_probs = sum_probs / sum_weights
+    final_preds = np.argmax(final_probs, axis=1)
+
+    return final_preds, all_probs, final_probs
+
+def calculate_weights(y_test: pd.DataFrame, all_probs):
+    weights = []
+    for prob in all_probs:
+        pred = np.argmax(prob, axis=1)
+        tn, fp, fn, tp = confusion_matrix(y_test, pred).ravel().tolist()
+        tpr = round(tp / (tp + fn), 3)
+        weights.append(tpr)
+    
+    return weights
 
 def rf_cl(dset: pd.DataFrame, test_size, botnet: str):
     results = {"Precision": [], "F1": [], "TNR": [], "TPR": [], "Date": []}
@@ -254,7 +284,8 @@ def ensemble_cl(dset: pd.DataFrame, test_size, botnet: str):
     calculate_metrics(y_test_past, pred, results, botnet)
 
     mask_neg = (y_train == 0)
-    X_neg, y_neg = best_K_data(clf, X_train[mask_neg], y_train[mask_neg], 1000)
+    K = y_train[mask_neg].shape[0] // 2
+    X_neg, y_neg = best_K_data(clf, X_train[mask_neg], y_train[mask_neg], K)
     
     # -------------------- CONTINUAL LEARNING --------------------
 
@@ -262,24 +293,27 @@ def ensemble_cl(dset: pd.DataFrame, test_size, botnet: str):
     f = open("performances/tmp.txt", "a")
     print(f"Start time: {datetime.datetime.now().time()}", file=f)
 
+    weights = []
     for i, (x_test, y_test) in enumerate(zip(X_optimized_tests, y_optimized_tests), 1):
         print(f"Cycle {i}")
-
-        K = y_test.shape[0] // 2
-        pred, avg_probs = ensemble_predict(ensemble_models, x_test)
-        
+        weights.append(1)
+        pred, all_probs, avg_probs = ensemble_predict_weighted(ensemble_models, x_test, weights)
         # print(check_importances(clf, X_columns))
         calculate_metrics(y_test, pred, results, botnet)
 
         max_probs = np.max(avg_probs, axis=1)
+        K = y_test.shape[0] // 2
         indexes = np.argsort(max_probs)[:K]
-        print(y_test.shape)
+
+        # print(all_probs)
+        weights = calculate_weights(y_test, all_probs)
+
         if botnet == "all":
             ensemble_models.append(RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42).fit(x_test, y_test))
         elif botnet == "single":
-            X_sliding = np.vstack((X_neg, x_test))
-            y_sliding = np.concatenate((y_neg, y_test))
-            ensemble_models.append(RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42).fit(X_sliding[indexes], y_sliding[indexes]))
+            X_sliding = np.vstack((X_neg, x_test[indexes]))
+            y_sliding = np.concatenate((y_neg, y_test[indexes]))
+            ensemble_models.append(RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42).fit(X_sliding, y_sliding))
 
     endtime = time.time() - starttime
     print(f"Time taken: {endtime}", file=f)
@@ -287,7 +321,3 @@ def ensemble_cl(dset: pd.DataFrame, test_size, botnet: str):
     print_metrics(results, f)
     f.close()
     return results
-
-# def mode_per_column(col):
-#     return np.argmax(np.bincount(col))
-

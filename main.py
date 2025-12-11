@@ -5,7 +5,7 @@ import warnings
 import re
 
 from concept_drift import rf_downsampling, rf_oversampling, standard_rf, rf_periodic_drift, rf_monthly
-from strategies.continual_learning import rf_cl, ensemble_cl
+from strategies.continual_learning import rf_cl, ensemble_cl, decimal_floor
 
 pd.options.mode.chained_assignment = None
 
@@ -264,7 +264,6 @@ for i in range(1,6):
     results_standard = ensemble_cl(all_dsets, test_size, botnet="all")
     print_metrics(results_standard)
     all_results.append(results_standard)
-    exit()
 
 mean_results = {}
 metrics = ["Precision", "F1", "TPR", "TNR"]
@@ -272,6 +271,10 @@ metrics = ["Precision", "F1", "TPR", "TNR"]
 for m in metrics:
     values = [run[m] for run in all_results]
     mean_results[m] = np.mean(values, axis=0).tolist()
+
+for key, value in mean_results.items():
+    floored_list = [decimal_floor(n, 3) for n in value]
+    mean_results[key] = floored_list
 
 print(f"Valori medi: {mean_results}")
 
