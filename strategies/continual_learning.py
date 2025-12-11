@@ -250,7 +250,7 @@ def ensemble_cl(dset: pd.DataFrame, test_size, botnet: str):
     y = dset['Label'].values
     X = dset.drop(columns=['Date', 'Label']).values
     X_columns = dset.drop(columns=['Date', 'Label']).columns
-    fixed_start_date = pd.to_datetime("2016-09-08")
+    fixed_start_date = pd.to_datetime("2016-09-01")
     train_size = 8
     ensemble_models = []
 
@@ -259,15 +259,9 @@ def ensemble_cl(dset: pd.DataFrame, test_size, botnet: str):
     X_train, y_train, t_train, X_optimized_tests, y_optimized_tests, t_optimized_tests = splits_handle(splits, botnet)
     calculate_dates(fixed_start_date, train_size, results, t_optimized_tests)
 
-    # Downsample dati di training (per performance) e testing (troppi malware)
+    # Downsample dati di training (per performance)
     if botnet == "all":
         X_train, y_train, t_train = spatial.downsample_set(X_train, y_train, t_train.values, min_pos_rate=1/2)
-
-        # for i, (x_i, y_i, t_i) in enumerate(zip(X_optimized_tests, y_optimized_tests, t_optimized_tests)):
-        #     x_i, y_i, t_i = spatial.downsample_set(x_i, y_i, t_i.values, min_pos_rate=1/21)
-        #     X_optimized_tests[i] = x_i
-        #     y_optimized_tests[i] = y_i
-        #     t_optimized_tests[i] = t_i
     elif botnet == "single":
         X_train, y_train, t_train = spatial.downsample_set(X_train, y_train, t_train.values, min_pos_rate=1/21)
     else:
@@ -284,7 +278,7 @@ def ensemble_cl(dset: pd.DataFrame, test_size, botnet: str):
     calculate_metrics(y_test_past, pred, results, botnet)
 
     mask_neg = (y_train == 0)
-    K = y_train[mask_neg].shape[0] // 2
+    K = np.sum(y_train == 0) // 2
     X_neg, y_neg = best_K_data(clf, X_train[mask_neg], y_train[mask_neg], K)
     
     # -------------------- CONTINUAL LEARNING --------------------
@@ -300,16 +294,15 @@ def ensemble_cl(dset: pd.DataFrame, test_size, botnet: str):
         pred, all_probs, avg_probs = ensemble_predict_weighted(ensemble_models, x_test, weights)
         # print(check_importances(clf, X_columns))
         calculate_metrics(y_test, pred, results, botnet)
-
+        
         max_probs = np.max(avg_probs, axis=1)
         K = y_test.shape[0] // 2
         indexes = np.argsort(max_probs)[:K]
 
-        # print(all_probs)
         weights = calculate_weights(y_test, all_probs)
 
         if botnet == "all":
-            ensemble_models.append(RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42).fit(x_test, y_test))
+            ensemble_models.append(RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42).fit(x_test[indexes], y_test[indexes]))
         elif botnet == "single":
             X_sliding = np.vstack((X_neg, x_test[indexes]))
             y_sliding = np.concatenate((y_neg, y_test[indexes]))
