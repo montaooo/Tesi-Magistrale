@@ -25,26 +25,34 @@ def decimal_floor(n: float, decimals: int):
     n /= (10**decimals)
     return n
 
-def calculate_metrics(y_test, pred, results, botnet="all"):
-    tn, fp, fn, tp = confusion_matrix(y_test, pred).ravel().tolist()
-    tpr = decimal_floor(tp / (tp + fn), 3)
-    if botnet == 'all':
+def calculate_metrics(y_test, pred, results: dict[str, list], botnet="all"):
+    tn, fp, fn, tp = confusion_matrix(y_test, pred, labels=[0,1]).ravel().tolist()
+
+    if tp + fn == 0:
+        tpr = "/"
+    else:
+        tpr = decimal_floor(tp / (tp + fn), 3)
+
+    if tn + fp == 0:
+        tnr = "/"
+    else:
         tnr = decimal_floor(tn / (tn + fp), 3)
+
+    if tp + fp + fn == 0 or botnet == "single":
+        f1 = "/"
+    else:
         f1 = decimal_floor((2*tp) / (2*tp + fp + fn), 3)
+    
+    if tp + fp == 0:
+        precision = "/"
+    else:
         precision = decimal_floor(tp / (tp + fp), 3)
 
-        results["F1"].append(f1)
-        results["Precision"].append(precision)
-        results["TPR"].append(tpr)
-        results["TNR"].append(tnr)
-    elif botnet == "single":
-        results["TPR"].append(tpr)
-        results["TNR"].append("/")
-        results["Precision"].append("/")
-        results["F1"].append("/")
-    else:
-        raise ValueError(f"name '{botnet}' invalid")
-
+    results["F1"].append(f1)
+    results["Precision"].append(precision)
+    results["TPR"].append(tpr)
+    results["TNR"].append(tnr)
+    
 def check_importances(model, X_columns):
     importances = model.feature_importances_.tolist()
     imp_d = {}
@@ -173,11 +181,49 @@ def calculate_weights(y_test: pd.DataFrame, all_probs):
     weights = []
     for prob in all_probs:
         pred = np.argmax(prob, axis=1)
-        tn, fp, fn, tp = confusion_matrix(y_test, pred).ravel().tolist()
+        tn, fp, fn, tp = confusion_matrix(y_test, pred, labels=[0,1]).ravel().tolist()
         tpr = round(tp / (tp + fn), 3)
         weights.append(tpr)
     
     return weights
+
+def prova(dset: pd.DataFrame, test_size, botnet: str):
+    results = {"Precision": [], "F1": [], "TNR": [], "TPR": [], "Date": []}
+    t = pd.to_datetime(dset['Date'])
+    y = dset['Label'].values
+    X = dset.drop(columns=['Date', 'Label']).values
+    fixed_start_date = pd.to_datetime("2017-04-08")
+    train_size = 1
+
+    splits = temporal.time_aware_train_test_split(X, y, t, train_size=train_size, test_size=1, granularity="month", start_date=fixed_start_date)
+    X_train, X_tests, y_train, y_tests, t_train, t_tests = splits
+    X_tests, y_tests, t_tests = clean_dsets(X_tests, y_tests, t_tests)
+
+    if botnet == "all":
+        X_train, y_train, t_train = spatial.downsample_set(X_train, y_train, t_train.values, min_pos_rate=1/2)
+    else:
+        raise ValueError(f"botnet name '{botnet}' invalid")
+
+    clf = RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42)
+
+    print("Old data training...")
+    X_train_past, X_test_past, y_train_past, y_test_past = train_test_split(X_train, y_train, test_size=test_size, random_state=42, stratify=y_train)
+
+    clf.fit(X_train_past, y_train_past)
+    pred = clf.predict(X_test_past)
+    calculate_metrics(y_test_past, pred, results, botnet)
+
+    print("Start Testing")
+
+    for i, (X_test, y_test, t_test) in enumerate(zip(X_tests, y_tests, t_tests)):
+        
+        
+        # print(t_test)
+        pred = clf.predict(X_test)
+        calculate_metrics(y_test, pred, results, botnet)
+    
+    print(results)
+    exit()
 
 def rf_cl(dset: pd.DataFrame, test_size, botnet: str):
     results = {"Precision": [], "F1": [], "TNR": [], "TPR": [], "Date": []}
@@ -250,8 +296,8 @@ def ensemble_cl(dset: pd.DataFrame, test_size, botnet: str):
     y = dset['Label'].values
     X = dset.drop(columns=['Date', 'Label']).values
     X_columns = dset.drop(columns=['Date', 'Label']).columns
-    fixed_start_date = pd.to_datetime("2016-09-01")
-    train_size = 8
+    fixed_start_date = pd.to_datetime("2016-09-15")
+    train_size = 10
     ensemble_models = []
 
     splits = temporal.time_aware_train_test_split(X, y, t, train_size=train_size, test_size=1, granularity="month", start_date=fixed_start_date)
@@ -289,6 +335,7 @@ def ensemble_cl(dset: pd.DataFrame, test_size, botnet: str):
 
     weights = []
     for i, (x_test, y_test) in enumerate(zip(X_optimized_tests, y_optimized_tests), 1):
+        unlearning = {"Precision": [], "F1": [], "TNR": [], "TPR": [], "Date": []}
         print(f"Cycle {i}")
         weights.append(1)
         pred, all_probs, avg_probs = ensemble_predict_weighted(ensemble_models, x_test, weights)
@@ -301,16 +348,45 @@ def ensemble_cl(dset: pd.DataFrame, test_size, botnet: str):
 
         weights = calculate_weights(y_test, all_probs)
 
+        # -------------------- MACHINE UNLEARNING --------------------
         if botnet == "all":
+            if i != 1:
+                total_tpr = results['TPR'][-1]
+                total_tnr = results['TNR'][-1]
+                total_f1 = results['F1'][-1]
+                for j in range(len(ensemble_models)):
+                    models_left = ensemble_models[:j] + ensemble_models[j+1:]
+                    weights_lef = weights[:j] + weights[j+1:]
+                    pred, all_probs, avg_probs = ensemble_predict_weighted(models_left, x_test, weights_lef)
+                    calculate_metrics(y_test, pred, unlearning, botnet)
+                max_index = unlearning['F1'].index(max(unlearning['F1']))
+                
+                if unlearning['F1'][max_index] >= total_f1 - 0.05 and unlearning['TNR'][max_index] >= total_tnr - 0.05 and unlearning['TPR'][max_index] >= total_tpr - 0.05:
+                    del ensemble_models[max_index]
+                    del weights[max_index]
+            
             ensemble_models.append(RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42).fit(x_test[indexes], y_test[indexes]))
         elif botnet == "single":
+            if i != 1:
+                total_tpr = results['TPR'][-1]
+                for j in range(len(ensemble_models)):
+                    models_left = ensemble_models[:j] + ensemble_models[j+1:]
+                    weights_lef = weights[:j] + weights[j+1:]
+                    pred, all_probs, avg_probs = ensemble_predict_weighted(models_left, x_test, weights_lef)
+                    calculate_metrics(y_test, pred, unlearning, botnet)
+                max_index = unlearning['TPR'].index(max(unlearning['TPR']))
+
+                if unlearning['TPR'][max_index] >= total_tpr - 0.05:
+                    del ensemble_models[max_index]
+                    del weights[max_index]
+            
             X_sliding = np.vstack((X_neg, x_test[indexes]))
             y_sliding = np.concatenate((y_neg, y_test[indexes]))
             ensemble_models.append(RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42).fit(X_sliding, y_sliding))
 
     endtime = time.time() - starttime
     print(f"Time taken: {endtime}", file=f)
-
+    print(len(ensemble_models))
     print_metrics(results, f)
     f.close()
     return results

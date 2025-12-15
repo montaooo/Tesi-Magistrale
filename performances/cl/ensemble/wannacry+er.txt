@@ -1,0 +1,48 @@
+Test sui soli dati malevoli di WANNACRY. 
+Il training avviene con dati dal 13-09-2016 al 12-06-2017 (downsample 1:20), mentre il testing avviene per i seguenti mesi: 13-06/12-07 2017, 13-07/12-08 2017.
+
+Ensemble con applicazione di CL - Experience replay (il 50% dei dati più importanti vengono selezionati per il modello da allenare).
+
+START
+
+Start time: 14:52:51.718443
+Time taken: 17.514084339141846
+|  Date  |  Precision  |  F1  |  TNR  |  TPR  |
+|:------:|:-----------:|:----:|:-----:|:-----:|
+| 5/2017 |      /      |  /   |   /   | 0.999 |
+| 6/2017 |      /      |  /   |   /   | 0.886 |
+| 7/2017 |      /      |  /   |   /   | 0.775 |
+
+Start time: 14:53:28.666769
+Time taken: 16.974754333496094
+|  Date  |  Precision  |  F1  |  TNR  |  TPR  |
+|:------:|:-----------:|:----:|:-----:|:-----:|
+| 5/2017 |      /      |  /   |   /   | 0.998 |
+| 6/2017 |      /      |  /   |   /   | 0.846 |
+| 7/2017 |      /      |  /   |   /   | 0.774 |
+
+Start time: 14:54:07.385542
+Time taken: 18.43073058128357
+|  Date  |  Precision  |  F1  |  TNR  |  TPR  |
+|:------:|:-----------:|:----:|:-----:|:-----:|
+| 5/2017 |      /      |  /   |   /   | 0.998 |
+| 6/2017 |      /      |  /   |   /   | 0.872 |
+| 7/2017 |      /      |  /   |   /   | 0.775 |
+
+Start time: 14:54:46.392405
+Time taken: 18.506667137145996
+|  Date  |  Precision  |  F1  |  TNR  |  TPR  |
+|:------:|:-----------:|:----:|:-----:|:-----:|
+| 5/2017 |      /      |  /   |   /   | 0.998 |
+| 6/2017 |      /      |  /   |   /   | 0.882 |
+| 7/2017 |      /      |  /   |   /   | 0.776 |
+
+Start time: 14:55:26.364007
+Time taken: 18.074602842330933
+|  Date  |  Precision  |  F1  |  TNR  |  TPR  |
+|:------:|:-----------:|:----:|:-----:|:-----:|
+| 5/2017 |      /      |  /   |   /   | 0.998 |
+| 6/2017 |      /      |  /   |   /   | 0.895 |
+| 7/2017 |      /      |  /   |   /   | 0.781 |
+
+Valori medi: {'TPR': [0.998, 0.876, 0.776]}

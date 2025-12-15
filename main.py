@@ -5,7 +5,7 @@ import warnings
 import re
 
 from concept_drift import rf_downsampling, rf_oversampling, standard_rf, rf_periodic_drift, rf_monthly
-from strategies.continual_learning import rf_cl, ensemble_cl, decimal_floor
+from strategies.continual_learning import rf_cl, ensemble_cl, decimal_floor, prova
 
 pd.options.mode.chained_assignment = None
 
@@ -141,23 +141,23 @@ normal_list = [
     FlowFile("2016", "09", "13", "normal", "2"),
     FlowFile("2016", "09", "13", "normal", "3"),
     FlowFile("2016", "09", "13", "normal", "4"),
-    # FlowFile("2017", "07", "03", "normal", "5"),
-    # FlowFile("2017", "07", "23", "normal", "6"),
+    FlowFile("2017", "07", "03", "normal", "5"),
+    FlowFile("2017", "07", "23", "normal", "6"),
     # FlowFile("2017", "09", "05", "normal", "7"),
     FlowFile("2017", "04", "30", "normal", "8"),
-    # FlowFile("2017", "05", "02", "normal", "9"),
-    # FlowFile("2017", "05", "08", "normal", "10"),
+    FlowFile("2017", "05", "02", "normal", "9"),
+    FlowFile("2017", "05", "08", "normal", "10"),
     FlowFile("2017", "04", "18", "normal", "11"),
     FlowFile("2017", "04", "19", "normal", "12"),
     FlowFile("2017", "04", "25", "normal", "13"),
     FlowFile("2017", "04", "28", "normal", "14"),
     FlowFile("2017", "04", "30", "normal", "15"),
-    # FlowFile("2017", "05", "01", "normal", "16"),
-    # FlowFile("2017", "05", "01", "normal", "17"),
-    # FlowFile("2017", "05", "01", "normal", "18"),
-    # FlowFile("2017", "05", "01", "normal", "19"),
+    FlowFile("2017", "05", "01", "normal", "16"),
+    FlowFile("2017", "05", "01", "normal", "17"),
+    FlowFile("2017", "05", "01", "normal", "18"),
+    FlowFile("2017", "05", "01", "normal", "19"),
     # # FlowFile("2013", "12", "17", "normal", "20"),
-    # FlowFile("2017", "05", "02", "normal", "21"),
+    FlowFile("2017", "05", "02", "normal", "21"),
     # FlowFile("2018", "05", "07", "normal", "22")
 ]
 
@@ -181,26 +181,26 @@ malicious_list = [
     # # FlowFile("2021", "07", "30", "trickbot", "17"),
     # # FlowFile("2018", "03", "27", "trickbot", "18"),   
 
-    # FlowFile("2015", "03", "12", "dridex", "1"),
-    # FlowFile("2016", "02", "12", "dridex", "2"),
-    # FlowFile("2017", "02", "27", "dridex", "4"),
-    # FlowFile("2017", "02", "27", "dridex", "5"),
-    FlowFile("2017", "04", "17", "dridex", "6"),
-    FlowFile("2017", "04", "18", "dridex", "7"),
-    FlowFile("2017", "04", "18", "dridex", "8"),
-    FlowFile("2017", "05", "15", "dridex", "10"),
-    FlowFile("2017", "05", "16", "dridex", "9"),
-    FlowFile("2017", "06", "24", "dridex", "12"),
-    FlowFile("2017", "05", "15", "dridex", "11"),
-    FlowFile("2018", "01", "29", "dridex", "13"),
-    FlowFile("2018", "01", "30", "dridex", "14"),
-    FlowFile("2018", "04", "13", "dridex", "15"),
+    # # FlowFile("2015", "03", "12", "dridex", "1"),
+    # # FlowFile("2016", "02", "12", "dridex", "2"),
+    # # FlowFile("2017", "02", "27", "dridex", "4"),
+    # # FlowFile("2017", "02", "27", "dridex", "5"),
+    # FlowFile("2017", "04", "17", "dridex", "6"),
+    # FlowFile("2017", "04", "18", "dridex", "7"),
+    # FlowFile("2017", "04", "18", "dridex", "8"),
+    # FlowFile("2017", "05", "15", "dridex", "10"),
+    # FlowFile("2017", "05", "16", "dridex", "9"),
+    # FlowFile("2017", "06", "24", "dridex", "12"),
+    # FlowFile("2017", "05", "15", "dridex", "11"),
+    # # FlowFile("2018", "01", "29", "dridex", "13"),
+    # # FlowFile("2018", "01", "30", "dridex", "14"),
+    # FlowFile("2018", "04", "13", "dridex", "15"),
 
-    # FlowFile("2017", "06", "24", "artemis", "1"),
-    # FlowFile("2017", "08", "14", "artemis", "2"),
-    # FlowFile("2017", "08", "01", "artemis", "3"),
-    # FlowFile("2017", "08", "15", "artemis", "4"),
-    # FlowFile("2017", "08", "16", "artemis", "5"),
+    FlowFile("2017", "06", "24", "artemis", "1"),
+    FlowFile("2017", "08", "14", "artemis", "2"),
+    FlowFile("2017", "08", "01", "artemis", "3"),
+    FlowFile("2017", "08", "15", "artemis", "4"),
+    FlowFile("2017", "08", "16", "artemis", "5"),
 
     # FlowFile("2017", "05", "14", "wannacry", "1"),
     # FlowFile("2017", "05", "14", "wannacry", "2"),
@@ -258,16 +258,21 @@ all_dsets['Date'] = pd.to_datetime(all_dsets['Date'])
 with open("performances/tmp.txt", "a") as f:
     f.write("START\n\n")
 
+botnet = "single"
 all_results = []
 for i in range(1,6):
     print(f"Test {i}")
-    results_standard = ensemble_cl(all_dsets, test_size, botnet="single")
+    results_standard = ensemble_cl(all_dsets, test_size, botnet)
     print_metrics(results_standard)
     all_results.append(results_standard)
+    exit()
 
 mean_results = {}
-# metrics = ["Precision", "F1", "TPR", "TNR"]
-metrics = ['TPR']
+if botnet == "all":
+    metrics = ["Precision", "F1", "TPR", "TNR"]
+else:
+    metrics = ['TPR']
+
 for m in metrics:
     values = [run[m] for run in all_results]
     mean_results[m] = np.mean(values, axis=0).tolist()
@@ -284,17 +289,25 @@ pendlegreen="#32c63c"
 pendlered="#B11616"
 fig, ax1 = plt.subplots(figsize=(10, 5))
 
-# ax1.plot(mean_results['Precision'], marker='o', color=pendlegreen)
-# ax1.plot(mean_results['F1'], marker='o', color=pendleblue)
-# ax1.plot(mean_results['TNR'], marker='o', color='cyan')
-ax1.plot(mean_results['TPR'], marker='o', color=pendlered)
-# ax1.legend(['Precision', 'F1', 'TNR', 'TPR'])
-ax1.legend(['TPR'])
-ax1.set_ylabel('Performance')
-ax1.grid(axis = 'y')
-ax1.set_xticks(range(len(results_standard['Date'])))
-ax1.set_xticklabels(results_standard['Date'])
-ax1.set_title("ENSEMBLE+CL - DRIDEX")
+if botnet == "all":
+    ax1.plot(mean_results['Precision'], marker='o', color=pendlegreen)
+    ax1.plot(mean_results['F1'], marker='o', color=pendleblue)
+    ax1.plot(mean_results['TNR'], marker='o', color='cyan')
+    ax1.plot(mean_results['TPR'], marker='o', color=pendlered)
+    ax1.legend(['Precision', 'F1', 'TNR', 'TPR'])
+    ax1.set_ylabel('Performance')
+    ax1.grid(axis = 'y')
+    ax1.set_xticks(range(len(results_standard['Date'])))
+    ax1.set_xticklabels(results_standard['Date'])
+    ax1.set_title("ENSEMBLE+CL-ER+MU")
+else:
+    ax1.plot(mean_results['TPR'], marker='o', color=pendlered)
+    ax1.legend(['TPR'])
+    ax1.set_ylabel('Performance')
+    ax1.grid(axis = 'y')
+    ax1.set_xticks(range(len(results_standard['Date'])))
+    ax1.set_xticklabels(results_standard['Date'])
+    ax1.set_title("ENSEMBLE+CL-ER+MU - DRIDEX")
 
 # ax2.plot(results_downsample['Precision'], marker='o', color=pendleyellow)
 # ax2.plot(results_downsample['Recall'], marker='o', color='red')
