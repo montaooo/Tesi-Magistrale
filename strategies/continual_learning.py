@@ -232,6 +232,20 @@ def update_buffer(buffer_X, buffer_y, new_X, new_y, size: int):
     
     return X_combined[indexes], y_combined[indexes]
 
+def most_important_features(max_probs, X_test: pd.DataFrame, y_test: pd.DataFrame, K=10000):
+    idx_neg_full = np.where(y_test == 0)[0]
+    idx_pos_full = np.where(y_test == 1)[0]
+    
+    neg_indexes = idx_neg_full[np.argsort(max_probs[idx_neg_full])[:K]]
+    pos_indexes = idx_pos_full[np.argsort(max_probs[idx_pos_full])[:K]]
+
+    X_neg = X_test[neg_indexes]
+    y_neg = y_test[neg_indexes]
+    X_pos = X_test[pos_indexes]
+    y_pos = y_test[pos_indexes]
+
+    return X_neg, y_neg, X_pos, y_pos
+
 def cl_mu(dset: pd.DataFrame, test_size, botnet: str):
     results = {"Precision": [], "F1": [], "TNR": [], "TPR": [], "Date": []}
     t = pd.to_datetime(dset['Date'])
@@ -241,6 +255,7 @@ def cl_mu(dset: pd.DataFrame, test_size, botnet: str):
     train_size = 8
     ensemble_models = []
     weights = []
+    target_samples = 50000
 
     splits = temporal.time_aware_train_test_split(X, y, t, train_size=train_size, test_size=1, granularity="month", start_date=fixed_start_date)
     X_train, X_tests, y_train, y_tests, t_train, t_tests = splits
@@ -265,21 +280,10 @@ def cl_mu(dset: pd.DataFrame, test_size, botnet: str):
     calculate_metrics(y_test_past, pred, results, botnet)
 
     max_probs = np.max(avg_probs, axis=1)
-    idx_neg_full = np.where(y_test_past == 0)[0]
-    idx_pos_full = np.where(y_test_past == 1)[0]
-    k_neg = len(idx_neg_full) // 2
-    k_pos = len(idx_pos_full) // 2
-    neg_indexes = idx_neg_full[np.argsort(max_probs[idx_neg_full])[:k_neg]]
-    pos_indexes = idx_pos_full[np.argsort(max_probs[idx_pos_full])[:k_pos]]
-
-    buffer_X_neg = X_test_past[neg_indexes]
-    buffer_y_neg = y_test_past[neg_indexes]
-    buffer_X_pos = X_test_past[pos_indexes]
-    buffer_y_pos = y_test_past[pos_indexes]
+    buffer_X_neg, buffer_y_neg, buffer_X_pos, buffer_y_pos = most_important_features(max_probs, X_test_past, y_test_past, K=target_samples)
     
     # -------------------- CONTINUAL LEARNING --------------------
     print("Start Testing")
-
     starttime = time.time()
     print(f"Start time: {datetime.datetime.now().time()}")
 
@@ -290,35 +294,28 @@ def cl_mu(dset: pd.DataFrame, test_size, botnet: str):
 
         pred, all_probs, avg_probs = ensemble_predict_weighted(ensemble_models, X_test, weights)
         max_probs = np.max(avg_probs, axis=1)
-        K = y_test.shape[0] // 2
-        indexes = np.argsort(max_probs)[:K]
         
-        X_new_ensemble = X_test[indexes]
-        y_new_ensemble = y_test[indexes]
+        # Controllo e aggiusto la quantità di dati benevoli e malevoli per il retraining        
+        X_test_neg, y_test_neg, X_test_pos, y_test_pos = most_important_features(max_probs, X_test, y_test, K=target_samples)
+        
+        if len(y_test_neg) < target_samples:
+            diff = target_samples - len(y_test_neg)
+            X_test_neg = np.vstack([X_test_neg, buffer_X_neg[:diff]])
+            y_test_neg = np.concatenate([y_test_neg, buffer_y_neg[:diff]])
+        if len(y_test_pos) < target_samples:
+            diff = target_samples - len(y_test_pos)
+            X_test_pos = np.vstack([X_test_pos, buffer_X_pos[:diff]])
+            y_test_pos = np.concatenate([y_test_pos, buffer_y_pos[:diff]])
+        
+        # Aggiornamento buffer
+        buffer_X_neg = X_test_neg
+        buffer_y_neg = y_test_neg
+        buffer_X_pos = X_test_pos
+        buffer_y_pos = y_test_pos
 
-        # Controllo se nel periodo corrente sono presenti entrambe le classi (0,1)
-        classes_found = np.unique(y_new_ensemble)
-        if len(classes_found) == 1:
-            missing_class = 1 if 0 in classes_found else 0
-            if missing_class == 1:
-                X_new_ensemble = np.vstack([X_new_ensemble, buffer_X_pos])
-                y_new_ensemble = np.concatenate([y_new_ensemble, buffer_y_pos])
-            else:
-                X_new_ensemble = np.vstack([X_new_ensemble, buffer_X_neg])
-                y_new_ensemble = np.concatenate([y_new_ensemble, buffer_y_neg])
+        X_new_ensemble = np.vstack([X_test_neg, X_test_pos])
+        y_new_ensemble = np.concatenate([y_test_neg, y_test_pos])
 
-        # Aggiornamento del buffer coi dati passati
-        idx_neg_new = np.where(y_test == 0)[0]
-        idx_pos_new = np.where(y_test == 1)[0]
-
-        if len(idx_neg_new) > 0:
-            k = len(idx_neg_new) // 2
-            n_idx = idx_neg_new[np.argsort(max_probs[idx_neg_new])[:k]]
-            buffer_X_neg, buffer_y_neg = X_test[n_idx], y_test[n_idx]
-        if len(idx_pos_new) > 0:
-            k = len(idx_pos_new) // 2
-            n_idx = idx_pos_new[np.argsort(max_probs[idx_pos_new])[:k]]
-            buffer_X_pos, buffer_y_pos = X_test[n_idx], y_test[n_idx]
 
         weights = calculate_weights(y_test, all_probs, botnet)
 
@@ -376,6 +373,7 @@ def cl(dset: pd.DataFrame, test_size, botnet: str):
     train_size = 8
     ensemble_models = []
     weights = []
+    target_samples = 50000
 
     splits = temporal.time_aware_train_test_split(X, y, t, train_size=train_size, test_size=1, granularity="month", start_date=fixed_start_date)
     X_train, X_tests, y_train, y_tests, t_train, t_tests = splits
@@ -400,21 +398,10 @@ def cl(dset: pd.DataFrame, test_size, botnet: str):
     calculate_metrics(y_test_past, pred, results, botnet)
 
     max_probs = np.max(avg_probs, axis=1)
-    idx_neg_full = np.where(y_test_past == 0)[0]
-    idx_pos_full = np.where(y_test_past == 1)[0]
-    k_neg = len(idx_neg_full) // 2
-    k_pos = len(idx_pos_full) // 2
-    neg_indexes = idx_neg_full[np.argsort(max_probs[idx_neg_full])[:k_neg]]
-    pos_indexes = idx_pos_full[np.argsort(max_probs[idx_pos_full])[:k_pos]]
-
-    buffer_X_neg = X_test_past[neg_indexes]
-    buffer_y_neg = y_test_past[neg_indexes]
-    buffer_X_pos = X_test_past[pos_indexes]
-    buffer_y_pos = y_test_past[pos_indexes]
+    buffer_X_neg, buffer_y_neg, buffer_X_pos, buffer_y_pos = most_important_features(max_probs, X_test_past, y_test_past, K=target_samples)
     
     # -------------------- CONTINUAL LEARNING --------------------
     print("Start Testing")
-    
     starttime = time.time()
     print(f"Start time: {datetime.datetime.now().time()}")
 
@@ -424,37 +411,27 @@ def cl(dset: pd.DataFrame, test_size, botnet: str):
 
         pred, all_probs, avg_probs = ensemble_predict_weighted(ensemble_models, X_test, weights)
         max_probs = np.max(avg_probs, axis=1)
-        K = y_test.shape[0] // 2
-        indexes = np.argsort(max_probs)[:K]
+
+        # Controllo e aggiusto la quantità di dati benevoli e malevoli per il retraining        
+        X_test_neg, y_test_neg, X_test_pos, y_test_pos = most_important_features(max_probs, X_test, y_test, K=target_samples)
         
-        X_new_ensemble = X_test[indexes]
-        y_new_ensemble = y_test[indexes]
-
-        # Controllo se nel periodo corrente sono presenti entrambe le classi (0,1)
-        classes_found = np.unique(y_new_ensemble)
-        if len(classes_found) == 1:
-            missing_class = 1 if 0 in classes_found else 0
-            if missing_class == 1:
-                X_new_ensemble = np.vstack([X_new_ensemble, buffer_X_pos])
-                y_new_ensemble = np.concatenate([y_new_ensemble, buffer_y_pos])
-            else:
-                X_new_ensemble = np.vstack([X_new_ensemble, buffer_X_neg])
-                y_new_ensemble = np.concatenate([y_new_ensemble, buffer_y_neg])
-
-        # Controllo il numero di dati delle due classi
+        if len(y_test_neg) < target_samples:
+            diff = target_samples - len(y_test_neg)
+            X_test_neg = np.vstack([X_test_neg, buffer_X_neg[:diff]])
+            y_test_neg = np.concatenate([y_test_neg, buffer_y_neg[:diff]])
+        if len(y_test_pos) < target_samples:
+            diff = target_samples - len(y_test_pos)
+            X_test_pos = np.vstack([X_test_pos, buffer_X_pos[:diff]])
+            y_test_pos = np.concatenate([y_test_pos, buffer_y_pos[:diff]])
         
-        # Aggiornamento del buffer coi dati passati
-        idx_neg_new = np.where(y_test == 0)[0]
-        idx_pos_new = np.where(y_test == 1)[0]
+        # Aggiornamento buffer
+        buffer_X_neg = X_test_neg
+        buffer_y_neg = y_test_neg
+        buffer_X_pos = X_test_pos
+        buffer_y_pos = y_test_pos
 
-        if len(idx_neg_new) > 0:
-            k = len(idx_neg_new) // 2
-            n_idx = idx_neg_new[np.argsort(max_probs[idx_neg_new])[:k]]
-            buffer_X_neg, buffer_y_neg = X_test[n_idx], y_test[n_idx]
-        if len(idx_pos_new) > 0:
-            k = len(idx_pos_new) // 2
-            n_idx = idx_pos_new[np.argsort(max_probs[idx_pos_new])[:k]]
-            buffer_X_pos, buffer_y_pos = X_test[n_idx], y_test[n_idx]
+        X_new_ensemble = np.vstack([X_test_neg, X_test_pos])
+        y_new_ensemble = np.concatenate([y_test_neg, y_test_pos])
 
         weights = calculate_weights(y_test, all_probs, botnet)
         weights.append(1)
@@ -500,7 +477,7 @@ def concept_drift(dset: pd.DataFrame, test_size, botnet: str):
     results['Date'].append(f"{t_train.max().month}-{t_train.max().year}")
     calculate_metrics(y_test_past, pred, results, botnet)
     
-    # -------------------- CONTINUAL LEARNING --------------------
+
     print("Start Testing")
 
     starttime = time.time()
@@ -519,7 +496,6 @@ def concept_drift(dset: pd.DataFrame, test_size, botnet: str):
     X_columns = dset.drop(columns=['Date', 'Label']).columns
     print(check_importances(clf, X_columns))
     return results
-
 
 # ------------------------- OLD ------------------------
 def rf_cl(dset: pd.DataFrame, test_size, botnet: str):

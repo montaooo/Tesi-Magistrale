@@ -165,144 +165,148 @@ test_size = 0.3
 filter_malicious = 0.5
 filter_normal = 1
 
-normal_list = [
-    # FlowFile("2013", "12", "17", "normal", "1"),
-    FlowFile("2016", "09", "13", "normal", "2"),
-    FlowFile("2016", "09", "13", "normal", "3"),
-    FlowFile("2016", "09", "13", "normal", "4"),
-    FlowFile("2017", "07", "03", "normal", "5"),
-    FlowFile("2017", "07", "23", "normal", "6"),
-    FlowFile("2017", "09", "05", "normal", "7"),
-    FlowFile("2017", "04", "30", "normal", "8"),
-    FlowFile("2017", "05", "02", "normal", "9"),
-    FlowFile("2017", "05", "08", "normal", "10"),
-    FlowFile("2017", "04", "18", "normal", "11"),
-    FlowFile("2017", "04", "19", "normal", "12"),
-    FlowFile("2017", "04", "25", "normal", "13"),
-    FlowFile("2017", "04", "28", "normal", "14"),
-    FlowFile("2017", "04", "30", "normal", "15"),
-    FlowFile("2017", "05", "01", "normal", "16"),
-    FlowFile("2017", "05", "01", "normal", "17"),
-    FlowFile("2017", "05", "01", "normal", "18"),
-    FlowFile("2017", "05", "01", "normal", "19"),
-    # # FlowFile("2013", "12", "17", "normal", "20"),
-    FlowFile("2017", "05", "02", "normal", "21"),
-    FlowFile("2018", "04", "07", "normal", "22")
-]
+# normal_list = [
+#     # FlowFile("2013", "12", "17", "normal", "1"),
+#     FlowFile("2016", "09", "13", "normal", "2"),
+#     FlowFile("2016", "09", "13", "normal", "3"),
+#     FlowFile("2016", "09", "13", "normal", "4"),
+#     FlowFile("2017", "07", "03", "normal", "5"),
+#     FlowFile("2017", "07", "23", "normal", "6"),
+#     FlowFile("2017", "09", "05", "normal", "7"),
+#     FlowFile("2017", "04", "30", "normal", "8"),
+#     FlowFile("2017", "05", "02", "normal", "9"),
+#     FlowFile("2017", "05", "08", "normal", "10"),
+#     FlowFile("2017", "04", "18", "normal", "11"),
+#     FlowFile("2017", "04", "19", "normal", "12"),
+#     FlowFile("2017", "04", "25", "normal", "13"),
+#     FlowFile("2017", "04", "28", "normal", "14"),
+#     FlowFile("2017", "04", "30", "normal", "15"),
+#     FlowFile("2017", "05", "01", "normal", "16"),
+#     FlowFile("2017", "05", "01", "normal", "17"),
+#     FlowFile("2017", "05", "01", "normal", "18"),
+#     FlowFile("2017", "05", "01", "normal", "19"),
+#     # # FlowFile("2013", "12", "17", "normal", "20"),
+#     FlowFile("2017", "05", "02", "normal", "21"),
+#     FlowFile("2018", "04", "07", "normal", "22")
+# ]
 
-malicious_list = [
-    FlowFile("2016", "10", "13", "other", "1"),
-     #FlowFile("2016", "11", "4", "other", "2"),
-    # FlowFile("2016", "11", "8", "other", "3"),
-    # FlowFile("2016", "11", "17", "other", "4"),
-    # FlowFile("2016", "12", "05", "other", "5"),
-    # FlowFile("2016", "12", "22", "other", "6"),
-    # FlowFile("2017", "01", "24", "other", "7"),
-    FlowFile("2017", "09", "10", "other", "8"),
-    FlowFile("2017", "10", "22", "other", "9"),
-    FlowFile("2017", "11", "10", "other", "10"),
-    FlowFile("2017", "12", "29", "other", "11"),
-    FlowFile("2018", "02", "02", "other", "12"),
-    FlowFile("2018", "02", "16", "other", "13"),
-    FlowFile("2018", "03", "20", "other", "14"),
+# malicious_list = [
+#     # FlowFile("2016", "10", "13", "other", "1"),
+#      #FlowFile("2016", "11", "4", "other", "2"),
+#     # FlowFile("2016", "11", "8", "other", "3"),
+#     # FlowFile("2016", "11", "17", "other", "4"),
+#     # FlowFile("2016", "12", "05", "other", "5"),
+#     # FlowFile("2016", "12", "22", "other", "6"),
+#     # FlowFile("2017", "01", "24", "other", "7"),
+#     FlowFile("2017", "09", "10", "other", "8"),
+#     FlowFile("2017", "10", "22", "other", "9"),
+#     FlowFile("2017", "11", "10", "other", "10"),
+#     FlowFile("2017", "12", "29", "other", "11"),
+#     FlowFile("2018", "02", "02", "other", "12"),
+#     FlowFile("2018", "02", "16", "other", "13"),
+#     FlowFile("2018", "03", "20", "other", "14"),
 
-    FlowFile("2017", "3", "30", "trickbot", "1"),  
-    # FlowFile("2017", "3", "30", "trickbot", "2"),  
-    # FlowFile("2017", "3", "29", "trickbot", "3"),  
-    # FlowFile("2017", "3", "30", "trickbot", "4"),  
-    # FlowFile("2017", "3", "30", "trickbot", "5"),  
-    FlowFile("2017", "04", "12", "trickbot", "6"),  
-    # FlowFile("2017", "04", "12", "trickbot", "7"),  
-    # FlowFile("2017", "04", "17", "trickbot", "8"),  
-    FlowFile("2017", "05", "15", "trickbot", "9"),  
-    FlowFile("2017", "06", "07", "trickbot", "10"), 
-    FlowFile("2017", "06", "24", "trickbot", "11"), 
-    FlowFile("2017", "06", "24", "trickbot", "12"), 
-    FlowFile("2017", "06", "24", "trickbot", "13"), 
-    FlowFile("2017", "06", "24", "trickbot", "14"), 
-    FlowFile("2018", "01", "30", "trickbot", "15"), 
-    FlowFile("2018", "01", "30", "trickbot", "16"), 
-    # FlowFile("2021", "07", "30", "trickbot", "17"),
-    FlowFile("2018", "03", "27", "trickbot", "18"),
+#     FlowFile("2017", "3", "30", "trickbot", "1"),  
+#     # FlowFile("2017", "3", "30", "trickbot", "2"),  
+#     # FlowFile("2017", "3", "29", "trickbot", "3"),  
+#     # FlowFile("2017", "3", "30", "trickbot", "4"),  
+#     # FlowFile("2017", "3", "30", "trickbot", "5"),  
+#     FlowFile("2017", "04", "12", "trickbot", "6"),  
+#     # FlowFile("2017", "04", "12", "trickbot", "7"),  
+#     # FlowFile("2017", "04", "17", "trickbot", "8"),  
+#     FlowFile("2017", "05", "15", "trickbot", "9"),  
+#     FlowFile("2017", "06", "07", "trickbot", "10"), 
+#     FlowFile("2017", "06", "24", "trickbot", "11"), 
+#     FlowFile("2017", "06", "24", "trickbot", "12"), 
+#     FlowFile("2017", "06", "24", "trickbot", "13"), 
+#     FlowFile("2017", "06", "24", "trickbot", "14"), 
+#     FlowFile("2018", "01", "30", "trickbot", "15"), 
+#     FlowFile("2018", "01", "30", "trickbot", "16"), 
+#     # FlowFile("2021", "07", "30", "trickbot", "17"),
+#     FlowFile("2018", "03", "27", "trickbot", "18"),
 
-    # FlowFile("2015", "03", "12", "dridex", "1"),
-    # FlowFile("2016", "02", "12", "dridex", "2"),
-    FlowFile("2017", "02", "27", "dridex", "4"),
-    # FlowFile("2017", "02", "27", "dridex", "5"),
-    FlowFile("2017", "04", "17", "dridex", "6"),
-    # FlowFile("2017", "04", "18", "dridex", "7"),
-    # FlowFile("2017", "04", "18", "dridex", "8"),
-    FlowFile("2017", "05", "15", "dridex", "10"),
-    FlowFile("2017", "05", "16", "dridex", "9"),
-    FlowFile("2017", "06", "24", "dridex", "12"),
-    FlowFile("2017", "05", "15", "dridex", "11"),
-    FlowFile("2018", "01", "29", "dridex", "13"),
-    FlowFile("2018", "01", "30", "dridex", "14"),
-    FlowFile("2018", "04", "13", "dridex", "15"),
+#     # FlowFile("2015", "03", "12", "dridex", "1"),
+#     # FlowFile("2016", "02", "12", "dridex", "2"),
+#     FlowFile("2017", "02", "27", "dridex", "4"),
+#     # FlowFile("2017", "02", "27", "dridex", "5"),
+#     FlowFile("2017", "04", "17", "dridex", "6"),
+#     # FlowFile("2017", "04", "18", "dridex", "7"),
+#     # FlowFile("2017", "04", "18", "dridex", "8"),
+#     FlowFile("2017", "05", "15", "dridex", "10"),
+#     FlowFile("2017", "05", "16", "dridex", "9"),
+#     FlowFile("2017", "06", "24", "dridex", "12"),
+#     FlowFile("2017", "05", "15", "dridex", "11"),
+#     FlowFile("2018", "01", "29", "dridex", "13"),
+#     FlowFile("2018", "01", "30", "dridex", "14"),
+#     FlowFile("2018", "04", "13", "dridex", "15"),
 
-    FlowFile("2017", "06", "24", "artemis", "1"),
-    FlowFile("2017", "08", "14", "artemis", "2"),
-    FlowFile("2017", "08", "01", "artemis", "3"),
-    FlowFile("2017", "08", "15", "artemis", "4"),
-    FlowFile("2017", "08", "16", "artemis", "5"),
+#     FlowFile("2017", "06", "24", "artemis", "1"),
+#     FlowFile("2017", "08", "14", "artemis", "2"),
+#     FlowFile("2017", "08", "01", "artemis", "3"),
+#     FlowFile("2017", "08", "15", "artemis", "4"),
+#     FlowFile("2017", "08", "16", "artemis", "5"),
 
-    FlowFile("2017", "05", "14", "wannacry", "1"),
-    FlowFile("2017", "05", "14", "wannacry", "2"),
-    FlowFile("2017", "05", "15", "wannacry", "3"),
-    FlowFile("2017", "05", "15", "wannacry", "4"),
-    FlowFile("2017", "05", "16", "wannacry", "5"),
-    FlowFile("2017", "06", "24", "wannacry", "6"),
-    FlowFile("2017", "07", "11", "wannacry", "7"),
-    FlowFile("2017", "07", "11", "wannacry", "8"),
-    FlowFile("2017", "07", "11", "wannacry", "9"),
-    FlowFile("2017", "07", "22", "wannacry", "10"),
-    FlowFile("2017", "07", "11", "wannacry", "11"),
-    FlowFile("2017", "07", "13", "wannacry", "12"),
-    FlowFile("2017", "07", "11", "wannacry", "13"),
-    FlowFile("2017", "07", "13", "wannacry", "14"),
-    FlowFile("2017", "07", "13", "wannacry", "15")
-    ]
+#     FlowFile("2017", "05", "14", "wannacry", "1"),
+#     FlowFile("2017", "05", "14", "wannacry", "2"),
+#     FlowFile("2017", "05", "15", "wannacry", "3"),
+#     FlowFile("2017", "05", "15", "wannacry", "4"),
+#     FlowFile("2017", "05", "16", "wannacry", "5"),
+#     FlowFile("2017", "06", "24", "wannacry", "6"),
+#     FlowFile("2017", "07", "11", "wannacry", "7"),
+#     FlowFile("2017", "07", "11", "wannacry", "8"),
+#     FlowFile("2017", "07", "11", "wannacry", "9"),
+#     FlowFile("2017", "07", "22", "wannacry", "10"),
+#     FlowFile("2017", "07", "11", "wannacry", "11"),
+#     FlowFile("2017", "07", "13", "wannacry", "12"),
+#     FlowFile("2017", "07", "11", "wannacry", "13"),
+#     FlowFile("2017", "07", "13", "wannacry", "14"),
+#     FlowFile("2017", "07", "13", "wannacry", "15")
+#     ]
 
-needed_features = ['Dur', 'SrcDur', 'DstDur', 'sTos', 'dTos',  'dTtl',
-           'TotPkts', 'SrcPkts', 'DstPkts', 'TotBytes', 'Label',
-           'SrcBytes', 'DstBytes', 'TotAppByte', 'SAppBytes', 'DAppBytes', 'Load',
-           'SrcLoad', 'DstLoad', 'Rate', 'SrcRate', 'DstRate', 'DstTCPBase', 'SrcTCPBase', 
-            'TcpRtt', 'SynAck', 'AckDat', 'sMaxPktSz', 'sMinPktSz', 'dMaxPktSz', 'dMinPktSz', 
-           'Sport_type', 'Dport_type', 'Flgs-f', 'Dir-f', 'Proto-f', 'State-f', 'Loss', 'Date']
+# needed_features = ['Dur', 'SrcDur', 'DstDur', 'sTos', 'dTos',  'dTtl',
+#            'TotPkts', 'SrcPkts', 'DstPkts', 'TotBytes', 'Label',
+#            'SrcBytes', 'DstBytes', 'TotAppByte', 'SAppBytes', 'DAppBytes', 'Load',
+#            'SrcLoad', 'DstLoad', 'Rate', 'SrcRate', 'DstRate', 'DstTCPBase', 'SrcTCPBase', 
+#             'TcpRtt', 'SynAck', 'AckDat', 'sMaxPktSz', 'sMinPktSz', 'dMaxPktSz', 'dMinPktSz', 
+#            'Sport_type', 'Dport_type', 'Flgs-f', 'Dir-f', 'Proto-f', 'State-f', 'Loss', 'Date']
 
-all_dsets = pd.DataFrame()
+# all_dsets = pd.DataFrame()
 
-print("Reading MALICIOUS...")
-for m in malicious_list:
-    # print(f"Reading file {m.filename}")
-    m_file = f"malicious/{m.name}/{m.filename}"
+# print("Reading MALICIOUS...")
+# for m in malicious_list:
+#     # print(f"Reading file {m.filename}")
+#     m_file = f"malicious/{m.name}/{m.filename}"
 
-    # Memory safe reading
-    # for chunk in pd.read_csv(m_file, chunksize=1000000, dtype={'Sport':'object', 'Dport':'object'}):
-    m_dset = pd.read_csv(m_file, dtype={'Sport':'object', 'Dport':'object'})
-    m_dset = preprocess(m_dset, filter_malicious, m, test_size)
-    all_dsets = pd.concat([all_dsets, m_dset])
+#     # Memory safe reading
+#     # for chunk in pd.read_csv(m_file, chunksize=1000000, dtype={'Sport':'object', 'Dport':'object'}):
+#     m_dset = pd.read_csv(m_file, dtype={'Sport':'object', 'Dport':'object'})
+#     m_dset = preprocess(m_dset, filter_malicious, m, test_size)
+#     all_dsets = pd.concat([all_dsets, m_dset])
 
-print("Reading NORMAL...")
-for n in normal_list:
-    # print(f"Reading file {n.filename}")
-    n_file = f"normal/{n.filename}"
-    n_dset = pd.read_csv(n_file, dtype={'Sport':'object', 'Dport':'object'})
-    n_dset = preprocess(n_dset, filter_normal, n, test_size)
-    all_dsets = pd.concat([all_dsets, n_dset])
+# print("Reading NORMAL...")
+# for n in normal_list:
+#     # print(f"Reading file {n.filename}")
+#     n_file = f"normal/{n.filename}"
+#     n_dset = pd.read_csv(n_file, dtype={'Sport':'object', 'Dport':'object'})
+#     n_dset = preprocess(n_dset, filter_normal, n, test_size)
+#     all_dsets = pd.concat([all_dsets, n_dset])
 
-all_dsets = handleCategorical(all_dsets)
-all_dsets = all_dsets[needed_features]
-all_dsets = all_dsets.reset_index(drop=True)
-all_dsets['Date'] = pd.to_datetime(all_dsets['Date'])
+# all_dsets = handleCategorical(all_dsets)
+# all_dsets = all_dsets[needed_features]
+# all_dsets = all_dsets.reset_index(drop=True)
+# all_dsets['Date'] = pd.to_datetime(all_dsets['Date'])
 
-# # Se ci sono ancora valori nulli, sono da rimuovere
-# # print(all_dsets.isna().any().any())
-# # print(all_dsets.columns[all_dsets.isna().any()])
+# # # Se ci sono ancora valori nulli, sono da rimuovere
+# # # print(all_dsets.isna().any().any())
+# # # print(all_dsets.columns[all_dsets.isna().any()])
+
+# # Scrittura su file pickle
+# with open("dsets.pkl", "wb") as f:
+#     pickle.dump(all_dsets, f)
 
 # Lettura da file pickle per ottimizzare la lettura iniziale
-# with open("dsets.pickle", "rb") as f:
-#     all_dsets = pickle.load(f)
+with open("dsets.pkl", "rb") as f:
+    all_dsets = pickle.load(f)
 
 # -------------------- TRAINING --------------------
 
@@ -325,7 +329,7 @@ for i in range(3):
     if i == 0:
         index = "no_retrain"
         print("CONCEPT DRIFT")
-        for i in range(1,3):
+        for i in range(1,5):
             print(f"Test {i}")
             results_standard = concept_drift(all_dsets, test_size, botnet)
             print_metrics(results_standard)
@@ -333,7 +337,7 @@ for i in range(3):
     elif i == 1:
         index = "cl"
         print("CONTINUAL LEARNING")
-        for i in range(1,3):
+        for i in range(1,5):
             print(f"Test {i}")
             results_standard = cl(all_dsets, test_size, botnet)
             print_metrics(results_standard)
@@ -341,7 +345,7 @@ for i in range(3):
     else:
         index = "cl_mu"
         print("CONTINUAL LEARNING + MACHINE UNLEARNING")
-        for i in range(1,3):
+        for i in range(1,5):
             print(f"Test {i}")
             results_standard = cl_mu(all_dsets, test_size, botnet)
             print_metrics(results_standard)
@@ -399,7 +403,7 @@ for m in metrics:
     ax1.set_xticks(all_dates)
     ax1.set_xticklabels([d.strftime('%m-%Y') for d in all_dates], rotation=45)
     ax1.set_ylim(-0.05, 1.05)
-
+    ax1.legend(fontsize=14)
     plt.xlabel('Data', fontsize=16)
     plt.ylabel(m, fontsize=16)
     plt.grid(True, axis='y', linestyle='--', alpha=0.6)
