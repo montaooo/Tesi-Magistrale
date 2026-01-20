@@ -1,0 +1,87 @@
+STANDARD DRIFT
+
+[('DstTCPBase', 0.19475902005126314), ('dTtl', 0.13814764739199412), ('dMinPktSz', 0.0722165347777258), ('Dir-f', 0.06618712865689337), ('DAppBytes', 0.057619345120122435), ('AckDat', 0.04514973756912947), ('DstBytes', 0.04222747108785681), ('Dport_type', 0.038087332580772834), ('Rate', 0.037724032426625316), ('SynAck', 0.03456675574928575), ('dMaxPktSz', 0.03261938436433764), ('Sport_type', 0.027232164934321713), ('TcpRtt', 0.026387944033552616), ('DstPkts', 0.02261717348613029), ('TotAppByte', 0.0186075318193564), ('State-f', 0.017446664018562937), ('Proto-f', 0.015790550062094007), ('DstLoad', 0.013951771932609238), ('SrcRate', 0.0116051016690119), ('DstRate', 0.011509157260916588), ('Dur', 0.011307805450006779), ('SrcLoad', 0.011187113998896334), ('SrcBytes', 0.007753528086823502), ('DstDur', 0.006572279171581552), ('sMaxPktSz', 0.005469897788918772), ('TotBytes', 0.0049451711177376755), ('SrcPkts', 0.004232809317135312), ('SAppBytes', 0.00407556526523262), ('SrcDur', 0.0037727229877169677), ('Load', 0.003434387476957795), ('TotPkts', 0.0034253235745498167), ('dTos', 0.0033575504752738987), ('sMinPktSz', 0.002323356193295567), ('SrcTCPBase', 0.00142318292912892), ('sTos', 0.001341931312268858), ('Flgs-f', 0.0005463870223098399), ('Loss', 0.0003785388396034476)]
+
+
+CL
+
+   Feature  Importance
+ dMaxPktSz    0.101721
+      dTtl    0.091401
+      dTos    0.087637
+DstTCPBase    0.087629
+ dMinPktSz    0.085304
+SrcTCPBase    0.047067
+ sMaxPktSz    0.033735
+  DstBytes    0.032281
+  TotBytes    0.031418
+TotAppByte    0.028972
+ sMinPktSz    0.022699
+ DAppBytes    0.022334
+   Proto-f    0.021986
+   State-f    0.021340
+  SrcBytes    0.021000
+   TotPkts    0.018536
+      Rate    0.018383
+      Load    0.018348
+Dport_type    0.017600
+Sport_type    0.016938
+    SynAck    0.016550
+   SrcRate    0.015687
+    TcpRtt    0.015459
+ SAppBytes    0.015100
+    AckDat    0.013724
+       Dur    0.011818
+   SrcLoad    0.011654
+     Dir-f    0.010649
+    SrcDur    0.009261
+   DstPkts    0.009230
+   DstLoad    0.007864
+    Flgs-f    0.007146
+    DstDur    0.007105
+   DstRate    0.006763
+   SrcPkts    0.006638
+      Loss    0.004683
+      sTos    0.004340
+
+
+CL + MU
+
+   Feature  Importance
+ dMinPktSz    0.100373
+ dMaxPktSz    0.093432
+      dTos    0.086767
+      dTtl    0.074540
+DstTCPBase    0.069177
+SrcTCPBase    0.049433
+  DstBytes    0.049153
+TotAppByte    0.043228
+  TotBytes    0.036658
+      Rate    0.030967
+ sMaxPktSz    0.030355
+ DAppBytes    0.030000
+ sMinPktSz    0.024363
+Dport_type    0.020359
+   TotPkts    0.020099
+   State-f    0.019988
+  SrcBytes    0.017227
+       Dur    0.016482
+Sport_type    0.015948
+      Load    0.015842
+    AckDat    0.015164
+   DstPkts    0.014946
+   Proto-f    0.013878
+    TcpRtt    0.013401
+    SynAck    0.013096
+   DstLoad    0.011629
+   SrcLoad    0.010967
+   SrcRate    0.010552
+ SAppBytes    0.009855
+   DstRate    0.009364
+     Dir-f    0.008383
+    DstDur    0.007605
+   SrcPkts    0.004889
+    SrcDur    0.004660
+      sTos    0.004293
+    Flgs-f    0.002356
+      Loss    0.000572
