@@ -4,10 +4,9 @@ import matplotlib.pyplot as plt
 import warnings
 import re
 import pickle
-
-# from concept_drift import rf_downsampling, rf_oversampling, standard_rf, rf_periodic_drift, rf_monthly
-from strategies.continual_learning import decimal_floor, concept_drift, cl, cl_mu
 from math import isnan
+
+from strategies.continual_learning import decimal_floor, concept_drift, cl, cl_mu
 
 pd.options.mode.chained_assignment = None
 
@@ -311,10 +310,7 @@ with open("dsets.pkl", "rb") as f:
 # -------------------- TRAINING --------------------
 
 botnet = "all"
-if botnet == "all":
-        metrics = ["Precision", "F1", "TPR", "TNR"]
-else:
-    metrics = ['TPR']
+metrics = ["Precision", "F1", "TPR", "TNR"]
 
 plot_data = {}
 aut_f1 = []
@@ -329,7 +325,7 @@ for i in range(3):
     if i == 0:
         index = "no_retrain"
         print("CONCEPT DRIFT")
-        for i in range(1,5):
+        for i in range(1,3):
             print(f"Test {i}")
             results_standard = concept_drift(all_dsets, test_size, botnet)
             print_metrics(results_standard)
@@ -337,7 +333,7 @@ for i in range(3):
     elif i == 1:
         index = "cl"
         print("CONTINUAL LEARNING")
-        for i in range(1,5):
+        for i in range(1,3):
             print(f"Test {i}")
             results_standard = cl(all_dsets, test_size, botnet)
             print_metrics(results_standard)
@@ -345,7 +341,7 @@ for i in range(3):
     else:
         index = "cl_mu"
         print("CONTINUAL LEARNING + MACHINE UNLEARNING")
-        for i in range(1,5):
+        for i in range(1,3):
             print(f"Test {i}")
             results_standard = cl_mu(all_dsets, test_size, botnet)
             print_metrics(results_standard)
