@@ -48,21 +48,20 @@ def dttl_dtos_poison(X, y: pd.DataFrame, X_columns: pd.Index, ratio=0.4):
 def poison_features(X, y, X_columns: pd.Index, features: list, increments: list):
     botnet_indexes = np.where(y == 1)[0]
     feature_columns = [X_columns.get_loc(column) for column in features]
-    botnet_indexes = np.random.choice(botnet_indexes, int(len(botnet_indexes) * 0.5), replace=False)
+    botnet_indexes = np.random.choice(botnet_indexes, int(len(botnet_indexes) * 0.3), replace=False)
     
+    idx = {name: X_columns.get_loc(name) for name in ["Dur", "SrcDur", "SrcBytes", "TotBytes", "TotPkts", "SrcPkts", "Rate", "SrcRate", "Load", "SrcLoad", "sMaxPktSz", "dMaxPktSz"]}
     for c_index, i, f in zip(feature_columns, increments, features):
         X[botnet_indexes, c_index] += i
 
         if f == "Dur":
-            src_dur = X_columns.get_loc('SrcDur')
-            X[botnet_indexes, src_dur] += i
-            rate = X_columns.get_loc('Rate')
-            src_rate = X_columns.get_loc('SrcRate')
-            tot_pkts = X_columns.get_loc('TotPkts')
-            src_pkts = X_columns.get_loc('SrcPkts')
-            X[botnet_indexes, rate] = (X[botnet_indexes, tot_pkts]-1)/X[botnet_indexes, c_index]
-            X[botnet_indexes, src_rate] = (X[botnet_indexes, src_pkts]-1)/X[botnet_indexes, src_dur]
-            load = X_columns.get_loc('Load')
-            src_load = X_columns.get_loc('SrcLoad')
-            X[botnet_indexes, load] = X[botnet_indexes, load] * ((X[botnet_indexes, c_index] - i) / X[botnet_indexes, c_index])
-            X[botnet_indexes, src_load] = X[botnet_indexes, src_load] * ((X[botnet_indexes, src_dur] - i) / X[botnet_indexes, src_dur])
+            X[botnet_indexes, idx['SrcDur']] += i
+        elif f ==  "SrcBytes":
+            X[botnet_indexes, idx['TotBytes']] += i
+        elif f == "TotPkts":
+            X[botnet_indexes, idx['SrcPkts']] += i
+        
+    X[botnet_indexes, idx['Rate']] = (X[botnet_indexes, idx['TotPkts']]-1)/X[botnet_indexes, idx['Dur']]
+    X[botnet_indexes, idx['SrcRate']] = (X[botnet_indexes, idx['SrcPkts']]-1)/X[botnet_indexes, idx['SrcDur']]
+    X[botnet_indexes, idx['Load']] = ((X[botnet_indexes, idx['TotBytes']] - (X[botnet_indexes, idx['sMaxPktSz']]+X[botnet_indexes, idx['dMaxPktSz']]))*8)/X[botnet_indexes, idx['Dur']]
+    X[botnet_indexes, idx['SrcLoad']] = ((X[botnet_indexes, idx['SrcBytes']] - X[botnet_indexes, idx['sMaxPktSz']])*8)/X[botnet_indexes, idx['SrcDur']]

@@ -334,7 +334,7 @@ for i in range(3):
     elif i == 1:
         index = "cl"
         print("CONTINUAL LEARNING")
-        for i in range(1,5):
+        for i in range(1,3):
             print(f"Test {i}")
             results_standard = cl(all_dsets, test_size, botnet)
             print_metrics(results_standard)
@@ -342,7 +342,7 @@ for i in range(3):
     else:
         index = "cl_mu"
         print("CONTINUAL LEARNING + MACHINE UNLEARNING")
-        for i in range(1,5):
+        for i in range(1,3):
             print(f"Test {i}")
             results_standard = cl_mu(all_dsets, test_size, botnet)
             print_metrics(results_standard)
