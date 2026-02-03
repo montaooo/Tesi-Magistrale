@@ -325,7 +325,7 @@ for i in range(3):
     if i == 0:
         index = "no_retrain"
         print("CONCEPT DRIFT")
-        for i in range(1,5):
+        for i in range(1,6):
             print(f"Test {i}")
             results_standard = concept_drift(all_dsets, test_size, botnet)
             print_metrics(results_standard)
@@ -367,12 +367,14 @@ for i in range(3):
     aut_tpr.append(calculate_aut(mean_results['TPR']))
     aut_f1.append(calculate_aut(mean_results['F1']))
 
-    print(f"Valori medi: {mean_results}")
+    # print(f"Valori medi: {mean_results}")
     plot_data[index] = mean_results
 
+print(f"Valori medi: {plot_data}")
 print(f"{aut_precision}")
 print(f"{aut_tpr}")
 print(f"{aut_f1}")
+
 
 # -------------------- GRAFICI --------------------
 # Grafici andamento decadimento temporale

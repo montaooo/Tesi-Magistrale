@@ -1,117 +1,149 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import pickle
-from tesseract import temporal, spatial
-from strategies.continual_learning import clean_dsets
-'''
-aut_precision = [0.9380555555555554, 0.9585277777777779, 0.9513611111111109]
-aut_tpr = [0.6924166666666666, 0.886111111111111, 0.9416666666666668]
-aut_f1 = [0.7533333333333332, 0.8943055555555554, 0.9311666666666666]
-plot_data = {
-    "no_retrain": [
-        {"Date": "2016-10-01", "Precision": 1.000, "F1": 0.998, "TNR": 1.000, "TPR": 0.997},
-        {"Date": "2016-11-01", "Precision": 1.000, "F1": 0.736, "TNR": float('nan'), "TPR": 0.586},
-        {"Date": "2016-12-01", "Precision": 1.000, "F1": 0.896, "TNR": float('nan'), "TPR": 0.818},
-        {"Date": "2017-01-01", "Precision": 1.000, "F1": 0.373, "TNR": float('nan'), "TPR": 0.229},
-        {"Date": "2017-02-01", "Precision": 1.000, "F1": 0.980, "TNR": float('nan'), "TPR": 0.963},
-        {"Date": "2017-03-01", "Precision": 1.000, "F1": 0.725, "TNR": float('nan'), "TPR": 0.569},
-        {"Date": "2017-04-01", "Precision": 0.701, "F1": 0.662, "TNR": 0.426, "TPR": 0.629},
-        {"Date": "2017-05-01", "Precision": 0.281, "F1": 0.395, "TNR": 0.317, "TPR": 0.667},
-        {"Date": "2017-06-01", "Precision": 1.000, "F1": 0.711, "TNR": float('nan'), "TPR": 0.554},
-        {"Date": "2017-07-01", "Precision": 0.906, "F1": 0.650, "TNR": 0.575, "TPR": 0.507},
-        {"Date": "2017-08-01", "Precision": 1.000, "F1": 0.914, "TNR": float('nan'), "TPR": 0.843},
-        {"Date": "2017-09-01", "Precision": 0.999, "F1": 0.885, "TNR": 0.998, "TPR": 0.793},
-        {"Date": "2017-10-01", "Precision": 1.000, "F1": 0.996, "TNR": float('nan'), "TPR": 0.992},
-        {"Date": "2017-11-01", "Precision": 1.000, "F1": 0.851, "TNR": float('nan'), "TPR": 0.742},
-        {"Date": "2017-12-01", "Precision": 1.000, "F1": 0.994, "TNR": float('nan'), "TPR": 0.989},
-        {"Date": "2018-01-01", "Precision": 1.000, "F1": 0.972, "TNR": float('nan'), "TPR": 0.946},
-        {"Date": "2018-02-01", "Precision": 1.000, "F1": 0.178, "TNR": float('nan'), "TPR": 0.102},
-        {"Date": "2018-03-01", "Precision": 1.000, "F1": 0.647, "TNR": float('nan'), "TPR": 0.542},
-        {"Date": "2018-04-01", "Precision": 0.996, "F1": 0.992, "TNR": 0.671, "TPR": 0.988}
-    ],
-    "cl": [
-        {"Date": "2016-10-01", "Precision": 1.000, "F1": 0.998, "TNR": 1.000, "TPR": 0.997},
-        {"Date": "2016-11-01", "Precision": 1.000, "F1": 0.768, "TNR": float('nan'), "TPR": 0.629},
-        {"Date": "2016-12-01", "Precision": 1.000, "F1": 0.999, "TNR": float('nan'), "TPR": 0.998},
-        {"Date": "2017-01-01", "Precision": 1.000, "F1": 0.700, "TNR": float('nan'), "TPR": 0.540},
-        {"Date": "2017-02-01", "Precision": 1.000, "F1": 0.974, "TNR": float('nan'), "TPR": 0.952},
-        {"Date": "2017-03-01", "Precision": 1.000, "F1": 0.985, "TNR": float('nan'), "TPR": 0.970},
-        {"Date": "2017-04-01", "Precision": 0.719, "F1": 0.835, "TNR": 0.167, "TPR": 0.998},
-        {"Date": "2017-05-01", "Precision": 0.557, "F1": 0.704, "TNR": 0.691, "TPR": 0.961},
-        {"Date": "2017-06-01", "Precision": 1.000, "F1": 0.998, "TNR": float('nan'), "TPR": 0.997},
-        {"Date": "2017-07-01", "Precision": 0.980, "F1": 0.909, "TNR": 0.866, "TPR": 0.848},
-        {"Date": "2017-08-01", "Precision": 1.000, "F1": 0.978, "TNR": float('nan'), "TPR": 0.958},
-        {"Date": "2017-09-01", "Precision": 0.998, "F1": 0.998, "TNR": 0.981, "TPR": 0.997},
-        {"Date": "2017-10-01", "Precision": 1.000, "F1": 0.973, "TNR": float('nan'), "TPR": 0.949},
-        {"Date": "2017-11-01", "Precision": 1.000, "F1": 0.999, "TNR": float('nan'), "TPR": 0.998},
-        {"Date": "2017-12-01", "Precision": 1.000, "F1": 0.997, "TNR": float('nan'), "TPR": 0.995},
-        {"Date": "2018-01-01", "Precision": 1.000, "F1": 0.999, "TNR": float('nan'), "TPR": 0.999},
-        {"Date": "2018-02-01", "Precision": 1.000, "F1": 0.285, "TNR": float('nan'), "TPR": 0.166},
-        {"Date": "2018-03-01", "Precision": 1.000, "F1": 0.998, "TNR": float('nan'), "TPR": 0.997},
-        {"Date": "2018-04-01", "Precision": 0.999, "F1": 0.999, "TNR": 0.993, "TPR": 0.999}
-    ],
-    "cl_mu": [
-        {"Date": "2016-10-01", "Precision": 1.000, "F1": 0.997, "TNR": 1.000, "TPR": 0.994},
-        {"Date": "2016-11-01", "Precision": 1.000, "F1": 0.763, "TNR": float('nan'), "TPR": 0.622},
-        {"Date": "2016-12-01", "Precision": 1.000, "F1": 0.999, "TNR": float('nan'), "TPR": 0.998},
-        {"Date": "2017-01-01", "Precision": 1.000, "F1": 0.706, "TNR": float('nan'), "TPR": 0.546},
-        {"Date": "2017-02-01", "Precision": 1.000, "F1": 0.992, "TNR": float('nan'), "TPR": 0.985},
-        {"Date": "2017-03-01", "Precision": 1.000, "F1": 0.984, "TNR": float('nan'), "TPR": 0.969},
-        {"Date": "2017-04-01", "Precision": 0.799, "F1": 0.882, "TNR": 0.459, "TPR": 0.986},
-        {"Date": "2017-05-01", "Precision": 0.336, "F1": 0.495, "TNR": 0.252, "TPR": 0.940},
-        {"Date": "2017-06-01", "Precision": 1.000, "F1": 0.998, "TNR": float('nan'), "TPR": 0.998},
-        {"Date": "2017-07-01", "Precision": 0.993, "F1": 0.992, "TNR": 0.951, "TPR": 0.992},
-        {"Date": "2017-08-01", "Precision": 1.000, "F1": 0.990, "TNR": float('nan'), "TPR": 0.980},
-        {"Date": "2017-09-01", "Precision": 0.998, "F1": 0.975, "TNR": 0.977, "TPR": 0.956},
-        {"Date": "2017-10-01", "Precision": 1.000, "F1": 0.998, "TNR": float('nan'), "TPR": 0.998},
-        {"Date": "2017-11-01", "Precision": 1.000, "F1": 0.999, "TNR": float('nan'), "TPR": 0.999},
-        {"Date": "2017-12-01", "Precision": 1.000, "F1": 0.998, "TNR": float('nan'), "TPR": 0.998},
-        {"Date": "2018-01-01", "Precision": 1.000, "F1": 0.999, "TNR": float('nan'), "TPR": 0.998},
-        {"Date": "2018-02-01", "Precision": 1.000, "F1": 0.995, "TNR": float('nan'), "TPR": 0.991},
-        {"Date": "2018-03-01", "Precision": 1.000, "F1": 0.999, "TNR": float('nan'), "TPR": 0.998},
-        {"Date": "2018-04-01", "Precision": 0.997, "F1": 0.997, "TNR": 0.817, "TPR": 0.998}
-    ]
+import matplotlib.dates as mdates
+
+aut_1 = [
+    [0.9675, 0.9679, 0.9670],
+    [0.4877, 0.6049, 0.7095],
+    [0.5229, 0.6363, 0.7419]
+]
+
+aut_2 = [
+    [0.9664, 0.9623, 0.9652],
+    [0.4738, 0.3570, 0.3790],
+    [0.5129, 0.3745, 0.3990]
+]
+
+aut_3 = [
+    [0.9670, 0.9633, 0.9685],
+    [0.4625, 0.3307, 0.4257],
+    [0.4960, 0.3435, 0.4436]
+]
+
+aut_4 = [
+    [0.9689, 0.9689, 0.9685],
+    [0.3971, 0.5987, 0.8576],
+    [0.4387, 0.6403, 0.8827]
+]
+
+aut_5 = [
+    [0.9676, 0.9648, 0.9646],
+    [0.5258, 0.4304, 0.3798],
+    [0.5611, 0.4414, 0.3817]
+]
+
+aut_6 = [
+    [0.9704, 0.9419, 0.9466],
+    [0.4455, 0.4941, 0.5804],
+    [0.4884, 0.5189, 0.5908]
+]
+
+aut_7 = [
+    [0.9664, 0.9649, 0.9683],
+    [0.4136, 0.4878, 0.5748],
+    [0.4505, 0.4827, 0.5979]
+]
+
+aut_8 = [
+    [0.9679, 0.9677, 0.9733],
+    [0.4761, 0.5012, 0.5636],
+    [0.5137, 0.5065, 0.5988]
+]
+
+aut_9 = [
+    [0.9692, 0.9682, 0.9684],
+    [0.3452, 0.5740, 0.8235],
+    [0.3844, 0.6135, 0.8607]
+]
+
+mean_aut = []
+for metric_values in zip(aut_1, aut_2, aut_3, aut_4, aut_5, aut_6, aut_7, aut_8, aut_9):
+    mean_aut.append(np.mean(metric_values, axis=0).tolist())
+
+print(mean_aut)
+
+concept_drift = {
+    'Date': ['2017-04-01', '2017-05-01', '2017-06-01', '2017-07-01', '2017-08-01', '2017-09-01', '2017-10-01', '2017-11-01', '2017-12-01', '2018-01-01', '2018-02-01', '2018-03-01', '2018-04-01'],
+    'Precision': [0.999, 0.633, 1.0, 0.997, 1.0, 0.985, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.999],
+    'F1': [0.999, 0.74, 0.963, 0.176, 0.948, 0.117, 0.103, 0.138, 0.618, 0.816, 0.0, 0.468, 0.396],
+    'TNR': [0.999, 0.797, float("nan"), 0.998, float("nan"), 0.986, float("nan"), float("nan"), float("nan"), float("nan"), float("nan"), float("nan"), 0.998],
+    'TPR': [0.999, 0.887, 0.932, 0.104, 0.904, 0.061, 0.054, 0.076, 0.553, 0.73, 0.0, 0.354, 0.312]
 }
 
-all_dates = [item['Date'] for item in plot_data["no_retrain"]]
+cl = {
+    'Date': ['2017-04-01', '2017-05-01', '2017-06-01', '2017-07-01', '2017-08-01', '2017-09-01', '2017-10-01', '2017-11-01', '2017-12-01', '2018-01-01', '2018-02-01', '2018-03-01', '2018-04-01'],
+    'Precision': [0.999, 0.631, 1.0, 0.998, 1.0, 0.984, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+    'F1': [0.999, 0.737, 0.999, 0.903, 0.559, 0.347, 0.015, 0.245, 0.383, 0.53, 0.0, 0.609, 0.301],
+    'TNR': [0.999, 0.793, float("nan"), 0.992, float("nan"), 0.983, float("nan"), float("nan"), float("nan"), float("nan"), float("nan"), float("nan"), 1.0],
+    'TPR': [0.999, 0.887, 0.999, 0.826, 0.546, 0.31, 0.007, 0.147, 0.304, 0.381, 0.0, 0.499, 0.205]
+}
 
-metrics = ["Precision", "F1", "TPR", "TNR"]
+mu = {
+    'Date': ['2017-04-01', '2017-05-01', '2017-06-01', '2017-07-01', '2017-08-01', '2017-09-01', '2017-10-01', '2017-11-01', '2017-12-01', '2018-01-01', '2018-02-01', '2018-03-01', '2018-04-01'],
+    'Precision': [0.999, 0.632, 1.0, 0.998, 1.0, 0.981, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+    'F1': [0.999, 0.735, 0.999, 0.871, 0.548, 0.291, 0.231, 0.407, 0.406, 0.485, 0.285, 0.686, 0.463],
+    'TNR': [0.999, 0.795, float("nan"), 0.993, float("nan"), 0.993, float("nan"), float("nan"), float("nan"), float("nan"), float("nan"), float("nan"), 0.999],
+    'TPR': [0.999, 0.888, 0.999, 0.767, 0.536, 0.222, 0.153, 0.316, 0.347, 0.359, 0.245, 0.584, 0.373]
+}
+
+plot_data = {
+    "no_retrain": concept_drift,
+    "cl": cl,
+    "cl_mu": mu
+}
+for key in plot_data:
+    plot_data[key] = pd.DataFrame(plot_data[key])
+    plot_data[key]['Date'] = pd.to_datetime(plot_data[key]['Date'])
+
 pendleblue="#1264B7"
 pendlegreen="#47a91d"
 pendlered="#901212"
-
 labels_info = [
     ('no_retrain', pendlered),
     ('cl', pendleblue),
     ('cl_mu', pendlegreen),
 ]
 
-for m in metrics:
-    fig, ax1 = plt.subplots(figsize=(20, 10))
+metrics = ['Precision', 'F1', 'TPR']
 
-    for label, color in labels_info:
-        df = pd.DataFrame(plot_data[label])
-        df_plot = df.dropna(subset=[m])
-        dates_dt = pd.to_datetime(df_plot['Date'])
-        ax1.plot(dates_dt, df_plot[m], marker='o', color=color, label=label)
+# fig, axes = plt.subplots(len(metrics), 1, figsize=(12, 18), sharex=True)
 
-    all_dates = pd.to_datetime(all_dates)
-    ax1.set_xticks(all_dates)
-    ax1.set_xticklabels([d.strftime('%m-%Y') for d in all_dates], rotation=45)
-    ax1.set_ylim(-0.05, 1.05)
-    ax1.legend(fontsize=14)
+for metric in metrics:
+    plt.figure(figsize=(20, 10))
+    ax = plt.gca()
+    
+    for strategy_key, color in labels_info:
+        df = plot_data[strategy_key]
+        mask = df[metric].notna()
+        plot_df = df[mask]
+        
+        plt.plot(plot_df['Date'], plot_df[metric], 
+                 label=strategy_key,
+                 color=color, 
+                 linewidth=2, 
+                 marker='o', 
+                 markersize=5)
+    
+    
+    plt.ylabel(metric, fontsize=16)
     plt.xlabel('Data', fontsize=16)
-    plt.ylabel(m, fontsize=16)
     plt.grid(True, axis='y', linestyle='--', alpha=0.6)
+    plt.legend(loc='best')
+    plt.ylim(-0.05, 1.05)
+    
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%Y'))
+    ax.xaxis.set_major_locator(mdates.MonthLocator())
+    plt.xticks(rotation=45)
+    
     plt.tight_layout()
-    plt.show()
+    plt.show() 
 
 
 # Istogramma dei valori AUT
-no_retrain_vals = [aut_precision[0], aut_tpr[0], aut_f1[0]]
-cl_vals = [aut_precision[1], aut_tpr[1], aut_f1[1]]
-cl_mu_vals = [aut_precision[2], aut_tpr[2], aut_f1[2]]
+no_retrain_vals = [mean_aut[0][0], mean_aut[1][0], mean_aut[2][0]]
+cl_vals = [mean_aut[0][1], mean_aut[1][1], mean_aut[2][1]]
+cl_mu_vals = [mean_aut[0][2], mean_aut[1][2], mean_aut[2][2]]
 metrics_label = ["Precision", "TPR", "F1"]
 labels = ['no_retrain', 'cl', 'cl_mu']
 colors = [pendlered, pendleblue, pendlegreen]
@@ -145,27 +177,3 @@ ax.legend(fontsize=14)
 ax.set_xlim(-0.8, 2.8)
 plt.tight_layout()
 plt.show()
-'''
-
-# with open("dsets.pickle", "rb") as f:
-#     dset = pickle.load(f)
-
-# t = pd.to_datetime(dset['Date'])
-# y = dset['Label'].values
-# X = dset.drop(columns=['Date', 'Label']).values
-# fixed_start_date = pd.to_datetime("2016-09-01")
-# train_size = 2
-
-# splits = temporal.time_aware_train_test_split(X, y, t, train_size=train_size, test_size=1, granularity="month", start_date=fixed_start_date)
-
-# X_train, X_tests, y_train, y_tests, t_train, t_tests = splits
-# X_tests, y_tests, t_tests = clean_dsets(X_tests, y_tests, t_tests)
-# X_train, y_train, t_train = spatial.downsample_set(X_train, y_train, t_train.values, min_pos_rate=1/2)
-
-# print(len(np.where(y_train == 0)[0]), len(np.where(y_train == 1)[0]))
-
-# for i, (X_test, y_test, t_test) in enumerate(zip(X_tests, y_tests, t_tests), 1):
-
-#     K = y_test.shape[0] // 2
-#     y_test = y_test[:K]
-#     print(len(np.where(y_test == 0)[0]), len(np.where(y_test == 1)[0]))

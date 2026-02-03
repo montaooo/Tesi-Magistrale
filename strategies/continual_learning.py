@@ -320,8 +320,8 @@ def cl_mu(dset: pd.DataFrame, test_size, botnet: str):
     print(f"Start time: {datetime.datetime.now().time()}")
 
     # Adversarial data
-    features_to_increment = ["Dur", "SrcBytes", "TotPkts"]
-    increments = [10, 16, 10]
+    features_to_increment = ["TotPkts"]
+    increments = [1]
 
     for i, (X_test, y_test, t_test) in enumerate(zip(X_tests, y_tests, t_tests), 1):
         t_test: pd.Series
@@ -330,7 +330,8 @@ def cl_mu(dset: pd.DataFrame, test_size, botnet: str):
         unlearning = {"Precision": [], "F1": [], "TNR": [], "TPR": [], "Date": []}
 
         # Adversarial function
-        poison_features(X_test, y_test, X_columns, features_to_increment, increments)
+        if i < 6:
+            poison_features(X_test, y_test, X_columns, features_to_increment, increments)
 
 
         pred, all_probs, avg_probs = ensemble_predict_weighted(ensemble_models, X_test, weights)
@@ -459,8 +460,8 @@ def cl(dset: pd.DataFrame, test_size, botnet: str):
     print(f"Start time: {datetime.datetime.now().time()}")
 
     # Adversarial data
-    features_to_increment = ["Dur", "SrcBytes", "TotPkts"]
-    increments = [10, 16, 10]
+    features_to_increment = ["TotPkts"]
+    increments = [1]
 
     for i, (X_test, y_test, t_test) in enumerate(zip(X_tests, y_tests, t_tests), 1):
         t_test: pd.Series
@@ -468,7 +469,8 @@ def cl(dset: pd.DataFrame, test_size, botnet: str):
         # X_test = scaler.transform(X_test)
         # Adversarial function
     
-        poison_features(X_test, y_test, X_columns, features_to_increment, increments)
+        if i < 6:
+            poison_features(X_test, y_test, X_columns, features_to_increment, increments)
 
         pred, all_probs, avg_probs = ensemble_predict_weighted(ensemble_models, X_test, weights)
         max_probs = np.max(avg_probs, axis=1)
@@ -557,8 +559,8 @@ def concept_drift(dset: pd.DataFrame, test_size, botnet: str):
     print(f"Start time: {datetime.datetime.now().time()}")
 
     # Adversarial data "Dur", "SrcBytes", "TotPkts"
-    features_to_increment = ["Dur", "SrcBytes", "TotPkts"]
-    increments = [10, 16, 10]
+    features_to_increment = ["TotPkts"]
+    increments = [1]
     
     for i, (X_test, y_test, t_test) in enumerate(zip(X_tests, y_tests, t_tests), 1):
         # X_test = scaler.transform(X_test)
@@ -567,9 +569,9 @@ def concept_drift(dset: pd.DataFrame, test_size, botnet: str):
         results['Date'].append(f"{t_test.iloc[0].month}-{t_test.iloc[0].year}")
         
         # Adversarial function
+        if i < 6:
+            poison_features(X_test, y_test, X_columns, features_to_increment, increments)
         
-        poison_features(X_test, y_test, X_columns, features_to_increment, increments)
-
         pred = clf.predict(X_test)
         calculate_metrics(y_test, pred, results, botnet)
 
