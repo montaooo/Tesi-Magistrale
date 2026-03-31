@@ -43,9 +43,10 @@ Il file ```main.py``` esegue tre scenari principali: **Concept Drift** (senza CL
 python main.py
 ```
 
-Per visualizzare risultati e osservazioni, leggere la tesi riguardante il progetto.
+Per visualizzare risultati e osservazioni, leggere la [Tesi](./tesi_lm.pdf) riguardante il progetto.
 
 ## Riferimenti
 
 * **Libreria Tesseract**: [s2labres/tesseract-ml-release](https://github.com/s2labres/tesseract-ml-release) - Utilizzata per l'analisi temporale e la mitigazione del bias.
 * **Dataset MCFP**: [Stratosphere IPS](https://www.stratosphereips.org/datasets-malware) - Malware Capture Facility Project.
+* **Tesi Magistrale**: [qui](./tesi_lm.pdf)
