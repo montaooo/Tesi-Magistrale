@@ -6,6 +6,8 @@ appunti/
 normal/
 malicious/
 tesseract/
+extra/
 
 note giornaliere.md
 dsets.pkl
+*.zip

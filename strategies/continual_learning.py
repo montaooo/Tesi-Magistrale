@@ -1,10 +1,10 @@
 import pandas as pd
 from sklearn.metrics import confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
-# from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression
 # from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
-# from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 import numpy as np
 import datetime, time
 from math import floor, isnan
@@ -330,8 +330,8 @@ def cl_mu(dset: pd.DataFrame, test_size, botnet: str):
         unlearning = {"Precision": [], "F1": [], "TNR": [], "TPR": [], "Date": []}
 
         # Adversarial function
-        if i < 6:
-            poison_features(X_test, y_test, X_columns, features_to_increment, increments)
+        # if i < 6:
+        #     poison_features(X_test, y_test, X_columns, features_to_increment, increments)
 
 
         pred, all_probs, avg_probs = ensemble_predict_weighted(ensemble_models, X_test, weights)
@@ -469,8 +469,8 @@ def cl(dset: pd.DataFrame, test_size, botnet: str):
         # X_test = scaler.transform(X_test)
         # Adversarial function
     
-        if i < 6:
-            poison_features(X_test, y_test, X_columns, features_to_increment, increments)
+        # if i < 6:
+        #     poison_features(X_test, y_test, X_columns, features_to_increment, increments)
 
         pred, all_probs, avg_probs = ensemble_predict_weighted(ensemble_models, X_test, weights)
         max_probs = np.max(avg_probs, axis=1)
@@ -569,8 +569,8 @@ def concept_drift(dset: pd.DataFrame, test_size, botnet: str):
         results['Date'].append(f"{t_test.iloc[0].month}-{t_test.iloc[0].year}")
         
         # Adversarial function
-        if i < 6:
-            poison_features(X_test, y_test, X_columns, features_to_increment, increments)
+        # if i < 6:
+        #     poison_features(X_test, y_test, X_columns, features_to_increment, increments)
         
         pred = clf.predict(X_test)
         calculate_metrics(y_test, pred, results, botnet)

@@ -307,6 +307,10 @@ filter_normal = 1
 with open("dsets.pkl", "rb") as f:
     all_dsets = pickle.load(f)
 
+stats_mensili = all_dsets.groupby([all_dsets['Date'].dt.to_period('M'), 'Label']).size().unstack(fill_value=0)
+stats_mensili.columns = ['Benevoli (0)', 'Malevoli (1)']
+print(stats_mensili)
+exit()
 # -------------------- TRAINING --------------------
 
 botnet = "all"
